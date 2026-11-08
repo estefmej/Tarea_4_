@@ -24,3 +24,7 @@ Thumbs.db
 
 # Configuración local de Claude Code (las Skills de .claude/ sí se versionan)
 .claude/settings.local.json
+
+# Microdatos a nivel de persona: no se versionan (se regeneran con la skill limpiando-enaho)
+salidas/*.parquet
+*.parquet
