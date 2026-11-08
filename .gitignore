@@ -21,3 +21,6 @@ mcp/datos/
 ~$*
 .DS_Store
 Thumbs.db
+
+# Configuración local de Claude Code (las Skills de .claude/ sí se versionan)
+.claude/settings.local.json
