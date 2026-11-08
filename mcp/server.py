@@ -191,8 +191,36 @@ def serie(codigo: str, desde: str, hasta: str) -> dict:
     return {k: r[k] for k in ("codigo", "nombre", "frecuencia", "datos", "omitidos", "fuente")}
 
 
-# TODO 2 · resumen(codigo, desde, hasta): primero, ultimo, cambio, variacion_pct, promedio, maximo y minimo
-#   (los tres últimos con su periodo). Úsenla para que el modelo nunca haga cuentas a mano.
+def _punto(df, i):
+    return {"periodo": df.periodo.loc[i], "valor": float(df.valor.loc[i])}
+
+
+@mcp.tool(annotations=SOLO_LECTURA)
+def resumen(codigo: str, desde: str, hasta: str) -> dict:
+    """Estadísticas de una serie del BCRP entre dos periodos, calculadas con pandas: úsenla en vez de hacer
+    cuentas a mano.
+
+    Devuelve primero y ultimo (periodo y valor), cambio (ultimo - primero), variacion_pct (cambio relativo
+    al primero, en %; None si el primero es 0), promedio, maximo y minimo (con su periodo), n, la fuente
+    y los periodos omitidos por no tener dato. Ojo: si la serie ya es una variación % (p. ej. el IPC a 12
+    meses), "cambio" está en puntos porcentuales.
+    Ejemplo: resumen("PN01273PM", "2024-01", "2024-12") -> inflación a 12 meses durante 2024.
+    """
+    r = _obtener(codigo, desde, hasta)
+    df = pd.DataFrame(r["datos"])
+    if df.empty:
+        raise ToolError(f"La serie {r['codigo']} no tiene datos entre {desde} y {hasta}. Fuente: {r['fuente']}")
+    df = df.sort_values("periodo", ignore_index=True)
+    primero, ultimo = df.valor.iloc[0], df.valor.iloc[-1]
+    cambio = ultimo - primero
+    return {"codigo": r["codigo"], "nombre": r["nombre"], "frecuencia": r["frecuencia"],
+            "primero": _punto(df, 0), "ultimo": _punto(df, len(df) - 1),
+            "cambio": float(cambio),
+            "variacion_pct": None if primero == 0 else float(cambio / abs(primero) * 100),
+            "promedio": float(df.valor.mean()),
+            "maximo": _punto(df, df.valor.idxmax()), "minimo": _punto(df, df.valor.idxmin()),
+            "n": int(len(df)), "omitidos": r["omitidos"], "fuente": r["fuente"]}
+
 
 # TODO 3 · Una herramienta suya, bien descrita. Ideas:
 #   - comparar_paises con la API del Banco Mundial, que tampoco pide clave:
