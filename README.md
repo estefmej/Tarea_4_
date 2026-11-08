@@ -103,7 +103,7 @@ resultado es el mismo cada vez.
 |---|---|---|---|
 | `limpiando-enaho` | Lee los módulos 34 y 02, filtra residentes habituales, une con `validate="m:1"`, construye departamento, área, sexo y pobreza; pondera y valida | `datos/966-Modulo34.zip`, `datos/966-Modulo02.zip` | `salidas/personas_2024.parquet` y `salidas/hogares_2024.parquet` (no se suben), `salidas/indicadores.csv`, `salidas/validacion.txt` |
 | `graficando-enaho` | Barras de pobreza (o pobreza extrema) por área, sexo, edad y departamento, con IC 95 % del diseño muestral y el promedio nacional | los dos parquet | `figuras/pobreza_{area,sexo,edad,departamento}_2024.png`, `salidas/grafico_por_<corte>_2024.csv` |
-| `mapeando-enaho` | Mapa coroplético por departamento unido por código (`ubigeo[:2]` = `FIRST_IDDP`) y comparación con la referencia | el parquet, el GeoJSON y el CSV de referencia | `mapas/pobreza_departamento_2024.png`, `salidas/comparacion_mapa.csv` |
+| `mapeando-enaho` | Mapa coroplético por departamento con la sumaria (`factor07 × mieperho`), unido por código (`ubigeo[:2]` = `FIRST_IDDP`) y comparado con la referencia | los dos parquet, el GeoJSON y el CSV de referencia | `mapas/pobreza_departamento_2024.png`, `salidas/comparacion_mapa.csv` |
 
 `graficando-enaho` y `mapeando-enaho` dicen: «Si no existe `salidas/personas_2024.parquet`, usa primero
 la skill `limpiando-enaho`». Así un solo pedido (por ejemplo, «Haz un mapa de la pobreza monetaria por
@@ -112,11 +112,12 @@ departamento con ENAHO 2024») activa dos skills seguidas.
 ### Ponderación
 
 Toda cifra está ponderada; nunca se usan promedios simples. La base de personas usa `facpob07`, el factor
-de expansión de cada persona. Como contraste, la sumaria usa `factor07 × mieperho`, porque cada hogar
-representa a tantas personas como su factor por el número de miembros. Las cifras oficiales por área y la
-referencia por departamento usan la sumaria, así que cada cifra se valida contra la referencia calculada
-con el mismo método. Las dos ponderaciones difieren en décimas porque en algunos hogares los residentes
-habituales no coinciden con `mieperho`; el detalle está en `salidas/validacion.txt`.
+de expansión de cada persona. La sumaria usa `factor07 × mieperho`, porque cada hogar representa a tantas
+personas como su factor por el número de miembros. Las cifras oficiales por área y la referencia por
+departamento usan la sumaria, así que los gráficos de área y departamento y el mapa también la usan; sexo
+y edad, que son atributos de cada persona, usan `facpob07`. Las dos ponderaciones difieren en décimas
+porque en algunos hogares los residentes habituales no coinciden con `mieperho`; el detalle está en
+`salidas/validacion.txt`.
 
 ### Descargar los datos
 
@@ -176,7 +177,7 @@ Cada cifra se compara con la referencia calculada con el mismo método.
 [APROBADA] Pobreza urbana (sumaria, factor07 × mieperho) ≈ 24.8 % (≤0.1 pp): 24.81 % (diferencia +0.01 pp)
 [APROBADA] Pobreza rural (sumaria, factor07 × mieperho) ≈ 39.3 % (≤0.1 pp): 39.30 % (diferencia +0.00 pp)
 
-[INFORMATIVA] Pobreza por área con personas y facpob07 (la que usan los gráficos y el mapa): urbano 24.74 %, rural 39.44 %.
+[INFORMATIVA] Pobreza por área con personas y facpob07 (contraste; los gráficos de área y departamento y el mapa usan la sumaria, los de sexo y edad usan personas): urbano 24.74 %, rural 39.44 %.
 [INFORMATIVA] Difiere de la sumaria porque en 1,846 de 33,691 hogares (5.5%) los residentes habituales del módulo 02 no coinciden con mieperho (el INEI excluye de mieperho a trabajadores del hogar y pensionistas). Son dos ponderaciones válidas; ninguna cifra se ajustó.
 
 Resultado: 12 de 12 verificaciones aprobadas.

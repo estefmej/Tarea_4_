@@ -257,7 +257,8 @@ def main() -> None:
     fallidas = [c for c in chequeos if not c[1] and c[2]]
     lineas += [
         "",
-        "[INFORMATIVA] Pobreza por área con personas y facpob07 (la que usan los gráficos y el mapa): "
+        "[INFORMATIVA] Pobreza por área con personas y facpob07 (contraste; los gráficos de área y "
+        "departamento y el mapa usan la sumaria, los de sexo y edad usan personas): "
         f"urbano {urb_p:.2f} %, rural {rur_p:.2f} %.",
         f"[INFORMATIVA] Difiere de la sumaria porque en {n_hog_distinto:,} de {len(sumaria):,} hogares "
         f"({n_hog_distinto / len(sumaria):.1%}) los residentes habituales del módulo 02 no coinciden con "

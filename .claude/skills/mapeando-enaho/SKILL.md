@@ -11,8 +11,9 @@ No calcules la pobreza por tu cuenta ni leas los `.dta` directamente.
 
 ## Pasos
 
-1. Verifica que exista `salidas/personas_2024.parquet`. Si no existe, usa la skill
-   `limpiando-enaho` y continúa solo si su `salidas/validacion.txt` no tiene `FALLIDA`.
+1. Verifica que existan `salidas/personas_2024.parquet` y `salidas/hogares_2024.parquet`. Si
+   falta alguno, usa la skill `limpiando-enaho` y continúa solo si su `salidas/validacion.txt`
+   no tiene `FALLIDA`.
 2. Verifica que existan en `datos/`:
    - `peru_departamental_simple.geojson` (límites; descarga:
      https://raw.githubusercontent.com/d2cml-ai/Data-Science-Python/main/sessions/06-geoespacial/lab/Data/peru_departamental_simple.geojson)
@@ -34,15 +35,15 @@ No calcules la pobreza por tu cuenta ni leas los `.dta` directamente.
 - Une `ubigeo[:2]` con `FIRST_IDDP`, ambos como texto. **Nunca por nombre**
   («APURIMAC» no es «Apurímac»).
 - Exige 25 departamentos con dato; Lima (15) y Callao (07) van separados.
-- Pondera con `facpob07`; nunca promedio simple.
-- Escala secuencial de un solo color, de claro a oscuro, desde 0; nunca arcoíris.
-- Leyenda con la unidad «% de personas» y nota «Fuente: INEI, ENAHO 2024».
+- Pondera con la sumaria de hogares, `factor07 × mieperho` (el mismo método del gráfico de
+  departamentos de `graficando-enaho` y de la referencia del curso); nunca promedio simple.
+- Escala secuencial `Blues`, de claro a oscuro, desde 0; nunca arcoíris.
+- Leyenda con la unidad «% de personas» y nota «Fuente: INEI, ENAHO 2024 (módulos 34 y 02)…».
 
 ## Comparación con la referencia
 
-`salidas/comparacion_mapa.csv` trae, por departamento, el valor del mapa (personas,
-`facpob07`), el valor con la sumaria (`factor07 × mieperho`, el método de la
-referencia) y la referencia del curso. La validación estricta (≤0.1 pp) usa el mismo
-método que la referencia. El valor del mapa puede diferir algunas décimas por la
-ponderación, y debe quedar a ≤1 pp. Cita las cifras desde ese CSV y no las presentes
-como causales.
+`salidas/comparacion_mapa.csv` trae, por departamento, el valor del mapa (sumaria,
+`factor07 × mieperho`), la referencia del curso, la diferencia (debe ser ≤0.1 pp) y, solo
+como contraste, la cifra con personas y `facpob07`. El script además comprueba que el mapa
+coincida con `salidas/indicadores.csv` y con `salidas/grafico_por_departamento_2024.csv`.
+Cita las cifras desde ese CSV y no las presentes como causales.

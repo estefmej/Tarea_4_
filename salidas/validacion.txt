@@ -15,7 +15,7 @@ Cada cifra se compara con la referencia calculada con el mismo método.
 [APROBADA] Pobreza urbana (sumaria, factor07 × mieperho) ≈ 24.8 % (≤0.1 pp): 24.81 % (diferencia +0.01 pp)
 [APROBADA] Pobreza rural (sumaria, factor07 × mieperho) ≈ 39.3 % (≤0.1 pp): 39.30 % (diferencia +0.00 pp)
 
-[INFORMATIVA] Pobreza por área con personas y facpob07 (la que usan los gráficos y el mapa): urbano 24.74 %, rural 39.44 %.
+[INFORMATIVA] Pobreza por área con personas y facpob07 (contraste; los gráficos de área y departamento y el mapa usan la sumaria, los de sexo y edad usan personas): urbano 24.74 %, rural 39.44 %.
 [INFORMATIVA] Difiere de la sumaria porque en 1,846 de 33,691 hogares (5.5%) los residentes habituales del módulo 02 no coinciden con mieperho (el INEI excluye de mieperho a trabajadores del hogar y pensionistas). Son dos ponderaciones válidas; ninguna cifra se ajustó.
 
 Resultado: 12 de 12 verificaciones aprobadas.
