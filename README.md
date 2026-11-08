@@ -101,8 +101,8 @@ resultado es el mismo cada vez.
 
 | Skill | Qué hace | Entra | Sale |
 |---|---|---|---|
-| `limpiando-enaho` | Lee los módulos 34 y 02, filtra residentes habituales, une con `validate="m:1"`, construye departamento, área, sexo y pobreza; pondera y valida | `datos/966-Modulo34.zip`, `datos/966-Modulo02.zip` | `salidas/personas_2024.parquet` (no se sube), `salidas/indicadores.csv`, `salidas/validacion.txt` |
-| `graficando-enaho` | Barras de pobreza por área, sexo y departamento | el parquet | `figuras/pobreza_{area,sexo,departamento}_2024.png` |
+| `limpiando-enaho` | Lee los módulos 34 y 02, filtra residentes habituales, une con `validate="m:1"`, construye departamento, área, sexo y pobreza; pondera y valida | `datos/966-Modulo34.zip`, `datos/966-Modulo02.zip` | `salidas/personas_2024.parquet` y `salidas/hogares_2024.parquet` (no se suben), `salidas/indicadores.csv`, `salidas/validacion.txt` |
+| `graficando-enaho` | Barras de pobreza (o pobreza extrema) por área, sexo, edad y departamento, con IC 95 % del diseño muestral y el promedio nacional | los dos parquet | `figuras/pobreza_{area,sexo,edad,departamento}_2024.png`, `salidas/grafico_por_<corte>_2024.csv` |
 | `mapeando-enaho` | Mapa coroplético por departamento unido por código (`ubigeo[:2]` = `FIRST_IDDP`) y comparación con la referencia | el parquet, el GeoJSON y el CSV de referencia | `mapas/pobreza_departamento_2024.png`, `salidas/comparacion_mapa.csv` |
 
 `graficando-enaho` y `mapeando-enaho` dicen: «Si no existe `salidas/personas_2024.parquet`, usa primero
@@ -143,7 +143,7 @@ lenguaje natural. Sin Claude Code, desde la raíz del proyecto:
 
 ```powershell
 uv run python .claude/skills/limpiando-enaho/scripts/limpiar.py --anio 2024
-uv run python .claude/skills/graficando-enaho/scripts/graficar.py --por todos
+uv run python .claude/skills/graficando-enaho/scripts/graficar.py --por todos   # --indicador extrema: pobreza extrema
 uv run python .claude/skills/mapeando-enaho/scripts/mapear.py
 uv run python scripts/actualizar_readme.py   # actualiza las cifras de abajo
 ```

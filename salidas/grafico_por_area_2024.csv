@@ -1,0 +1,3 @@
+codigo,categoria,estimacion,ee,ic_inf,ic_sup,n,upm_unica,indicador,metodo,unidad_n,promedio_peru,promedio_peru_ic_inf,promedio_peru_ic_sup
+rural,Rural,39.303,0.769,37.796,40.81,11660,1,pobreza,factor07 × mieperho (sumaria de hogares),hogares,27.579,26.589,28.57
+urbano,Urbana,24.807,0.603,23.624,25.99,22031,1,pobreza,factor07 × mieperho (sumaria de hogares),hogares,27.579,26.589,28.57

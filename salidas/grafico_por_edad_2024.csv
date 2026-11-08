@@ -1,0 +1,6 @@
+codigo,categoria,estimacion,ee,ic_inf,ic_sup,n,upm_unica,indicador,metodo,unidad_n,promedio_peru,promedio_peru_ic_inf,promedio_peru_ic_sup
+0-17,0-17,36.471,0.66,35.178,37.765,32701,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52
+18-29,18-29,23.946,0.704,22.566,25.327,16910,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52
+30-44,30-44,27.866,0.663,26.566,29.166,20648,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52
+45-64,45-64,21.153,0.543,20.088,22.217,24735,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52
+65+,65+,22.742,0.718,21.336,24.149,13670,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52

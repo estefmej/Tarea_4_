@@ -280,6 +280,15 @@ def main() -> None:
                 "pobre_extremo", "factor07", "mieperho", "linea", "linpe"]
     columnas = [c for c in columnas if c in base.columns]
     base[columnas].to_parquet(a.salidas / f"personas_{a.anio}.parquet", index=False)
+    # Base de hogares (sumaria) para estimar con factor07 × mieperho. Tampoco se versiona.
+    hog["pobre"] = hog["pobreza"] <= 2
+    hog["pobre_extremo"] = hog["pobreza"] == 1
+    hog["anio"] = a.anio
+    cols_hog = ["anio", *LLAVES_HOGAR, "ubigeo", "departamento", "dominio", "estrato", "area",
+                "pobreza", "pobre", "pobre_extremo", "factor07", "mieperho", "linea", "linpe"]
+    hog[[c for c in cols_hog if c in hog.columns]].to_parquet(
+        a.salidas / f"hogares_{a.anio}.parquet", index=False)
+    print(f"Guardado: {a.salidas / f'hogares_{a.anio}.parquet'} ({len(hog):,} hogares)")
     ind.to_csv(a.salidas / "indicadores.csv", index=False, encoding="utf-8")
     print(f"Guardado: {a.salidas / f'personas_{a.anio}.parquet'} ({len(base):,} personas)")
     print(f"Guardado: {a.salidas / 'indicadores.csv'} ({len(ind)} filas)")

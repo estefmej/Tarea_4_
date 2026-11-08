@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import textwrap
 from pathlib import Path
 
 import geopandas as gpd
@@ -168,8 +169,11 @@ def main() -> None:
                  x=0.04, y=0.97, ha="left", fontsize=13, fontweight="bold", color=TINTA)
     ax.set_title(f"Pobreza monetaria por departamento, {a.anio} (% de personas). "
                  "Lima y Callao por separado.", loc="left", fontsize=9, color=TINTA_2)
-    fig.text(0.04, 0.03, f"Fuente: INEI, ENAHO {a.anio}. Ponderado con facpob07 (residentes habituales). "
-             "Límites: GeoJSON departamental del curso.", fontsize=7.5, color=TINTA_2, ha="left")
+    # Misma nota que graficando-enaho (sin la frase de IC: el mapa no muestra intervalos).
+    nota = (f"Fuente: INEI, ENAHO {a.anio} (módulos 34 y 02). Estimación ponderada con facpob07 (personas). "
+            "Elaboración propia. La pobreza monetaria se mide por hogar: todos sus miembros comparten la "
+            "condición del hogar. Límites: GeoJSON departamental del curso.")
+    fig.text(0.04, 0.02, textwrap.fill(nota, 125), fontsize=7.5, color=TINTA_2, ha="left", va="bottom")
     a.mapas.mkdir(parents=True, exist_ok=True)
     salida = a.mapas / f"pobreza_departamento_{a.anio}.png"
     fig.savefig(salida, dpi=200, facecolor=FONDO, bbox_inches="tight")

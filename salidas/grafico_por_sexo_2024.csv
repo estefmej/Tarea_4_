@@ -1,0 +1,3 @@
+codigo,categoria,estimacion,ee,ic_inf,ic_sup,n,upm_unica,indicador,metodo,unidad_n,promedio_peru,promedio_peru_ic_inf,promedio_peru_ic_sup
+mujer,Mujer,27.676,0.517,26.662,28.69,56077,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52
+hombre,Hombre,27.371,0.538,26.317,28.425,52587,1,pobreza,facpob07 (personas),personas,27.529,26.538,28.52

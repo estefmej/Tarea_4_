@@ -24,6 +24,8 @@ Lo que no se discute (llaves, filtro, unión, ponderación y validación) está 
    factores ni tolerancias para que la cifra coincida.
 4. Responde con los archivos generados:
    - `salidas/personas_2024.parquet`: una fila por residente habitual (no se sube a git).
+   - `salidas/hogares_2024.parquet`: una fila por hogar de la sumaria, para estimar con
+     `factor07 × mieperho` (no se sube a git).
    - `salidas/indicadores.csv`: pobreza y pobreza extrema ponderadas por grupo.
    - `salidas/validacion.txt`: verificaciones APROBADA/FALLIDA.
 5. Para preguntas puntuales (p. ej. «¿pobreza en Cusco?») lee `salidas/indicadores.csv`
