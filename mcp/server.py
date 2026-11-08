@@ -222,11 +222,41 @@ def resumen(codigo: str, desde: str, hasta: str) -> dict:
             "n": int(len(df)), "omitidos": r["omitidos"], "fuente": r["fuente"]}
 
 
-# TODO 3 · Una herramienta suya, bien descrita. Ideas:
-#   - comparar_paises con la API del Banco Mundial, que tampoco pide clave:
-#     https://api.worldbank.org/v2/country/PER;CHL;COL/indicator/NY.GDP.MKTP.KD.ZG?format=json&date=2015:2025
-#   - correlacion(codigo_a, codigo_b, desde, hasta)
-#   - grafico(codigo, desde, hasta) que guarde un PNG en salidas/ y devuelva la ruta
+@mcp.tool(annotations=SOLO_LECTURA)
+def correlacion(codigo_a: str, codigo_b: str, desde: str, hasta: str) -> dict:
+    """Correlación de Pearson entre dos series del BCRP de la misma frecuencia, en los periodos que ambas tienen.
+
+    Qué hace: baja las dos series, las alinea por periodo, descarta los periodos donde falta alguna y calcula
+    el coeficiente (de -1 a 1) con pandas.
+    Cuándo usarla: para describir si dos indicadores se movieron juntos en un periodo, p. ej. inflación y
+    tipo de cambio, o tasa de referencia e inflación. Exige la misma frecuencia (Mensual con Mensual, etc.)
+    y al menos 3 periodos comunes; si no, da un ToolError.
+    Ojo: es una asociación descriptiva, NO prueba causalidad. No la presenten como causa y efecto.
+    Ejemplo: correlacion("PN01273PM", "PN01207PM", "2024-01", "2024-12") -> inflación a 12 meses frente
+    al tipo de cambio mensual durante 2024.
+    Devuelve coeficiente, n, periodos usados, periodos descartados, las fuentes y una nota.
+    """
+    fa, fb = _ficha(codigo_a.strip().upper()), _ficha(codigo_b.strip().upper())
+    if fa["frecuencia"] != fb["frecuencia"]:
+        raise ToolError(f"Frecuencias distintas: {fa['codigo']} es {fa['frecuencia']} y {fb['codigo']} es "
+                        f"{fb['frecuencia']}. Elijan dos series con la misma frecuencia.")
+    a, b = _obtener(fa["codigo"], desde, hasta), _obtener(fb["codigo"], desde, hasta)
+    sa = pd.DataFrame(a["datos"], columns=["periodo", "valor"]).set_index("periodo").valor.rename("a")
+    sb = pd.DataFrame(b["datos"], columns=["periodo", "valor"]).set_index("periodo").valor.rename("b")
+    junto = pd.concat([sa, sb], axis=1).sort_index()           # unión de periodos: los faltantes quedan NaN
+    completos = junto.dropna()
+    descartados = sorted(set(junto.index) - set(completos.index))
+    if len(completos) < 3:
+        raise ToolError(f"Solo hay {len(completos)} periodos con dato en ambas series entre {desde} y {hasta}; "
+                        "se necesitan al menos 3.")
+    coef = completos.a.corr(completos.b)
+    return {"codigo_a": fa["codigo"], "nombre_a": fa["nombre"], "codigo_b": fb["codigo"], "nombre_b": fb["nombre"],
+            "frecuencia": fa["frecuencia"],
+            "coeficiente": None if pd.isna(coef) else float(coef),  # NaN si una serie es constante
+            "n": int(len(completos)), "periodos": list(completos.index), "descartados": descartados,
+            "fuentes": [a["fuente"], b["fuente"]],
+            "nota": "Correlación de Pearson: asociación descriptiva entre las dos series en estos periodos. "
+                    "No implica causalidad."}
 
 # TODO 4 · Un recurso, por ejemplo la plantilla bcrp://serie/{codigo} con la ficha de la serie.
 
