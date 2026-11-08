@@ -37,8 +37,24 @@ No calcules la pobreza por tu cuenta ni leas los `.dta` directamente.
 - Exige 25 departamentos con dato; Lima (15) y Callao (07) van separados.
 - Pondera con la sumaria de hogares, `factor07 × mieperho` (el mismo método del gráfico de
   departamentos de `graficando-enaho` y de la referencia del curso); nunca promedio simple.
-- Escala secuencial `Blues`, de claro a oscuro, desde 0; nunca arcoíris.
+- Escala secuencial naranja de un solo tono (`Oranges`), de claro a oscuro, desde 0; nunca
+  arcoíris.
 - Leyenda con la unidad «% de personas» y nota «Fuente: INEI, ENAHO 2024 (módulos 34 y 02)…».
+
+## Etiquetas (ya están en el script)
+
+- Los 25 departamentos llevan nombre (con tildes) y valor en texto pequeño, por ejemplo
+  «Cajamarca\n45.0 %».
+- La etiqueta va centrada en el punto más interior del departamento (`polylabel`) o en el
+  punto más cercano donde quepa. El color de letra contrasta con el fondo: oscuro sobre tonos
+  claros y blanco sobre tonos oscuros (por luminancia).
+- Si no cabe, se prueba con letra más chica (5.5 y 5). Callao, Tumbes, Moquegua y Tacna, y
+  cualquier departamento costero cuya etiqueta no quepa entera, van **en el mar** con una
+  línea guía delgada: los del norte y centro en una columna al oeste y los del sur al
+  suroeste. Los del interior pueden pisar un poco el borde (≥80 % dentro) para que ninguna
+  línea guía cruce otros departamentos.
+- El script verifica que haya 25 etiquetas y que **ninguna se encime con otra**; si no, se
+  detiene con error. No muevas etiquetas a mano en el PNG: cambia las reglas del script.
 
 ## Comparación con la referencia
 

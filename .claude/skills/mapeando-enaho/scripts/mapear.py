@@ -18,7 +18,9 @@ Salidas:
 
 Reglas: une ubigeo[:2] con FIRST_IDDP como texto (nunca por nombre); exige 25
 departamentos con dato, con Lima (15) y Callao (07) separados; escala secuencial
-de claro a oscuro desde 0; leyenda «% de personas»; fuente.
+naranja (Oranges) de claro a oscuro desde 0; leyenda «% de personas»; fuente.
+Etiquetas con nombre y valor en los 25 departamentos; las que no caben van al mar con
+línea guía, y el script verifica que ninguna se encime con otra.
 """
 
 from __future__ import annotations
@@ -35,6 +37,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from shapely.geometry import Point, box  # noqa: E402
+from shapely.ops import polylabel  # noqa: E402
+from matplotlib.text import Text  # noqa: E402
 
 TINTA = "#0b0b0b"
 TINTA_2 = "#52514e"
@@ -53,8 +58,153 @@ def fallar(msj: str) -> None:
     sys.exit(f"ERROR: {msj}")
 
 
+# ------------------------------------------------------------------ etiquetas
+CMAP = "Oranges"
+TAM_ETIQUETA = 6.5
+TAM_CHICO = 5.5   # letra más chica para departamentos donde la normal no cabe
+TAM_MINIMO = 5.0  # último intento antes de mandar la etiqueta al mar
+# Departamentos pequeños: su etiqueta siempre va en el mar. Cualquier otro cuya etiqueta
+# no quepa dentro del polígono también sale, según la medición de etiquetar().
+SIEMPRE_FUERA = {"07", "24", "18", "23"}  # Callao, Tumbes, Moquegua, Tacna
+# Departamentos con costa: si su etiqueta no cabe entera, va al mar (que tienen al lado).
+# Solo los del interior aceptan una etiqueta que pise un poco el borde, porque sacarla
+# exigiría una línea guía que cruce otros departamentos.
+COSTEROS = {"24", "20", "14", "13", "02", "15", "07", "11", "04", "18", "23"}
+
+
+def nombre_bonito(nombre: str) -> str:
+    """'MADRE DE DIOS' -> 'Madre de Dios' (solo para mostrar; la unión es por código)."""
+    tildes = {"ANCASH": "Áncash", "APURIMAC": "Apurímac", "HUANUCO": "Huánuco",
+              "JUNIN": "Junín", "SAN MARTIN": "San Martín"}
+    if nombre in tildes:
+        return tildes[nombre]
+    palabras = nombre.lower().split()
+    return " ".join(w.capitalize() if i == 0 or w not in ("de", "la") else w
+                    for i, w in enumerate(palabras))
+
+
+def color_texto(valor: float, vmax: float) -> str:
+    """Letra oscura sobre tonos claros y blanca sobre tonos oscuros (por luminancia)."""
+    r, g, b, _ = plt.get_cmap(CMAP)(valor / vmax)
+    return TINTA if 0.299 * r + 0.587 * g + 0.114 * b > 0.55 else "white"
+
+
+def caja_datos(texto, ax, renderer, margen: float = 0.04):
+    """Rectángulo (en coordenadas del mapa) que ocupa un texto ya dibujado.
+
+    Para etiquetas con línea guía se mide solo el texto (Text.get_window_extent), no la línea.
+    """
+    bb = Text.get_window_extent(texto, renderer).transformed(ax.transData.inverted())
+    return box(bb.x0 - margen, bb.y0 - margen, bb.x1 + margen, bb.y1 + margen)
+
+
+def posicion_interior(geom, ancho: float, alto: float, ocupadas: list, min_frac: float = 1.0,
+                      paso: float = 0.08):
+    """Busca dentro del departamento un punto donde la etiqueta quepa y no choque.
+
+    Prueba el punto más interior (polylabel) y luego una grilla de puntos del polígono,
+    del más cercano al más lejano. Devuelve el primer punto donde cabe entera; si no hay,
+    el de mayor proporción dentro, siempre que sea ≥ min_frac. Si no, None.
+    """
+    mayor = max(geom.geoms, key=lambda g: g.area) if geom.geom_type == "MultiPolygon" else geom
+    centro = polylabel(mayor, tolerance=0.01)
+    x0, y0, x1, y1 = mayor.bounds
+    candidatos = [(centro.x, centro.y)] + sorted(
+        ((x, y) for x in np.arange(x0, x1, paso) for y in np.arange(y0, y1, paso)
+         if mayor.contains(Point(x, y))),
+        key=lambda c: (c[0] - centro.x) ** 2 + (c[1] - centro.y) ** 2)
+    zona = geom.buffer(0.02)
+    mejor, mejor_frac = None, 0.0
+    for x, y in candidatos:
+        caja = box(x - ancho / 2, y - alto / 2, x + ancho / 2, y + alto / 2)
+        if any(caja.intersects(o) for o in ocupadas):
+            continue
+        if zona.contains(caja):
+            return x, y
+        frac = zona.intersection(caja).area / caja.area
+        if frac > mejor_frac:
+            mejor, mejor_frac = (x, y), frac
+    return mejor if mejor_frac >= min_frac else None
+
+
+def etiquetar(fig, ax, mapa, vmax: float) -> None:
+    """Nombre y valor de los 25 departamentos; los que no caben van al mar con línea guía."""
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    textos, ocupadas, externos = [], [], []
+    # Primero los departamentos chicos: los grandes tienen más lugares donde moverse.
+    for _, f in mapa.assign(_area=mapa.geometry.area).sort_values("_area").iterrows():
+        etiqueta = f"{nombre_bonito(f['NOMBDEP'])}\n{f['pobreza_pct']:.1f} %"
+        geom = f.geometry
+        mayor = max(geom.geoms, key=lambda g: g.area) if geom.geom_type == "MultiPolygon" else geom
+        centro = polylabel(mayor, tolerance=0.01)
+        t = ax.text(centro.x, centro.y, etiqueta, ha="center", va="center", fontsize=TAM_ETIQUETA,
+                    color=color_texto(f["pobreza_pct"], vmax), zorder=5, linespacing=1.1)
+        # Intentos, en orden: cabe entera con letra normal; cabe entera con letra 5.5 o 5;
+        # solo en el interior, cabe al menos el 80 % (75 % con letra 5). Si no, va al mar.
+        intentos = [(TAM_ETIQUETA, 1.0), (TAM_CHICO, 1.0), (TAM_MINIMO, 1.0)]
+        if f["FIRST_IDDP"] not in COSTEROS:
+            intentos += [(TAM_ETIQUETA, 0.8), (TAM_CHICO, 0.8), (TAM_MINIMO, 0.75)]
+        lugar = None
+        if f["FIRST_IDDP"] not in SIEMPRE_FUERA:
+            for tam, min_frac in intentos:
+                t.set_fontsize(tam)
+                c = caja_datos(t, ax, renderer, 0.02)
+                lugar = posicion_interior(geom, c.bounds[2] - c.bounds[0], c.bounds[3] - c.bounds[1],
+                                          ocupadas, min_frac)
+                if lugar is not None:
+                    break
+        if lugar is None:
+            t.remove()
+            externos.append((f["FIRST_IDDP"], centro, etiqueta))
+        else:
+            t.set_position(lugar)
+            textos.append(t)
+            ocupadas.append(caja_datos(t, ax, renderer, 0.02))
+
+    # Etiquetas externas, en el mar: norte y centro en una columna al oeste; sur (Moquegua,
+    # Tacna…) al suroeste. Si una choca con otra, se mueve hasta quedar libre.
+    x_col, _ = ax.get_xlim()
+    norte = sorted([e for e in externos if e[1].y > -16], key=lambda e: -e[1].y)
+    sur = sorted([e for e in externos if e[1].y <= -16], key=lambda e: -e[1].y)
+    ubicar = [(e, (x_col + 0.4, e[1].y), "left", (0, -0.1)) for e in norte]
+    # Sur: el más al norte (Moquegua) va al suroeste y el siguiente (Tacna) justo al sur,
+    # así las líneas guía no se cruzan.
+    desfases = [(-2.0, -1.2), (-0.3, -1.1), (-2.6, -2.0)]
+    ubicar += [(e, (e[1].x + desfases[min(i, 2)][0], e[1].y + desfases[min(i, 2)][1]), "center", (-0.12, 0))
+               for i, e in enumerate(sur)]
+    colocados = []
+    for (cod, p, et), xy, ha, mover in ubicar:
+        t = ax.annotate(et, (p.x, p.y), xytext=xy, ha=ha, va="center", fontsize=TAM_ETIQUETA,
+                        color=TINTA, zorder=6, linespacing=1.1,
+                        arrowprops={"arrowstyle": "-", "color": TINTA_2, "linewidth": 0.5,
+                                    "shrinkA": 1, "shrinkB": 0})
+        for _ in range(60):
+            fig.canvas.draw()
+            c = caja_datos(t, ax, renderer)
+            if not any(c.intersects(o) for o in ocupadas):
+                break
+            t.xyann = (t.xyann[0] + mover[0], t.xyann[1] + mover[1])
+        colocados.append(t)
+        ocupadas.append(caja_datos(t, ax, renderer))
+
+    # Verificación final: 25 etiquetas y ninguna se encima con otra.
+    fig.canvas.draw()
+    todas = textos + colocados
+    cajas = [caja_datos(t, ax, renderer, 0) for t in todas]
+    for i in range(len(cajas)):
+        for j in range(i + 1, len(cajas)):
+            if cajas[i].intersects(cajas[j]):
+                fallar(f"las etiquetas «{todas[i].get_text()}» y «{todas[j].get_text()}» se enciman.")
+    if len(todas) != 25:
+        fallar(f"se esperaban 25 etiquetas y hay {len(todas)}.")
+    print(f"Etiquetas: {len(textos)} dentro del departamento y {len(colocados)} en el mar "
+          f"({', '.join(e[2].split(chr(10))[0] for e in externos)}); ninguna se encima.")
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--anio", type=int, default=2024)
     ap.add_argument("--datos", type=Path, default=Path("datos"))
@@ -157,28 +307,18 @@ def main() -> None:
 
     # 4. Mapa: una sola escala secuencial (claro→oscuro) desde 0.
     vmax = float(np.ceil(mapa["pobreza_pct"].max() / 10) * 10)
-    fig, ax = plt.subplots(figsize=(9, 9), facecolor=FONDO)
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor=FONDO)
     ax.set_facecolor(FONDO)
-    mapa.plot(column="pobreza_pct", cmap="Blues", vmin=0, vmax=vmax, ax=ax,
+    mapa.plot(column="pobreza_pct", cmap=CMAP, vmin=0, vmax=vmax, ax=ax,
               edgecolor="white", linewidth=0.6, legend=True,
-              legend_kwds={"label": "% de personas", "shrink": 0.55,
+              legend_kwds={"label": "% de personas", "shrink": 0.5,
                            "orientation": "vertical", "pad": 0.01})
     ax.set_axis_off()
-    # Rótulos en el océano con línea guía: los dos extremos, Lima y Callao (valores calculados).
+    minx, miny, maxx, maxy = mapa.total_bounds
+    ax.set_xlim(minx - 4.2, maxx + 0.3)  # espacio en el mar (oeste) para las etiquetas externas
+    ax.set_ylim(miny - 1.3, maxy + 0.3)
+    etiquetar(fig, ax, mapa, vmax)
     orden = mapa.sort_values("pobreza_pct")
-    minx, _, maxx, _ = mapa.total_bounds
-    x_texto = minx - 0.6
-    desplazar = {"15": +0.7, "07": -0.7}  # separa Lima y Callao, que están pegados
-    rotular = [orden.iloc[-1]["FIRST_IDDP"], "15", "07", orden.iloc[0]["FIRST_IDDP"]]
-    for cod in dict.fromkeys(rotular):
-        f = mapa[mapa["FIRST_IDDP"] == cod].iloc[0]
-        x, y = f.geometry.representative_point().coords[0]
-        ax.annotate(f"{f['NOMBDEP'].title()} {f['pobreza_pct']:.1f} %", (x, y),
-                    xytext=(x_texto, y + desplazar.get(cod, 0)), ha="right", va="center",
-                    fontsize=8.5, color=TINTA,
-                    arrowprops={"arrowstyle": "-", "color": TINTA_2, "linewidth": 0.7,
-                                "shrinkA": 2, "shrinkB": 0})
-    ax.set_xlim(minx - 4.5, maxx + 0.3)
     alto, bajo = orden.iloc[-1], orden.iloc[0]
     fig.suptitle(f"La pobreza monetaria en {a.anio} fue mayor en {alto['NOMBDEP'].title()} "
                  f"({alto['pobreza_pct']:.1f} %)\ny menor en {bajo['NOMBDEP'].title()} "
