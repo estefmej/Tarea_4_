@@ -1,0 +1,180 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ /skills 
+  ⎿  Updated 1 skill override
+
+❯ /limpiando-enaho 2024                                                         
+
+● Primero verifico que estén los zip en datos/.
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Los dos zip están. Corro el script.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La limpieza de la ENAHO 2024 terminó sin errores y las 12 verificaciones
+  salieron APROBADAS.
+
+  Cifras principales (INEI, ENAHO 2024; % de personas en pobreza monetaria):
+
+  ┌───────────┬───────────────────────────────┬───────────┬───────────────┐
+  │ Indicador │          Ponderación          │ Resultado │ Cifra oficial │
+  ├───────────┼───────────────────────────────┼───────────┼───────────────┤
+  │ Nacional  │ sumaria (factor07 × mieperho) │ 27.58 %   │ 27.6 %        │
+  ├───────────┼───────────────────────────────┼───────────┼───────────────┤
+  │ Nacional  │ personas (facpob07)           │ 27.53 %   │ 27.6 %        │
+  ├───────────┼───────────────────────────────┼───────────┼───────────────┤
+  │ Urbano    │ sumaria                       │ 24.81 %   │ 24.8 %        │
+  ├───────────┼───────────────────────────────┼───────────┼───────────────┤
+  │ Rural     │ sumaria                       │ 39.30 %   │ 39.3 %        │
+  └───────────┴───────────────────────────────┴───────────┴───────────────┘
+
+  - Datos: quedaron 108,664 residentes habituales de 117,721 filas del módulo
+    02, en 33,691 hogares. La unión de los módulos no perdió ni duplicó a nadie.
+    Hay 25 departamentos y no falta ningún dato en las variables clave.
+  - Diferencia entre ponderaciones: si se pondera por personas con facpob07, la
+    pobreza da 24.74 % en zona urbana y 39.44 % en zona rural. No cuadra exacto
+    con la sumaria porque en el 5.5 % de los hogares el número de residentes no
+    coincide con mieperho: el INEI deja fuera a trabajadores del hogar y
+    pensionistas. Las dos formas son válidas y no se ajustó ninguna cifra.
+
+  Archivos generados:
+  - salidas/personas_2024.parquet: una fila por residente habitual. No se sube a
+    git.
+  - salidas/hogares_2024.parquet: una fila por hogar, para estimar con factor07 
+    × mieperho. No se sube a git.
+  - salidas/indicadores.csv: pobreza y pobreza extrema ponderadas por grupo (58
+    filas).
+  - salidas/validacion.txt: el detalle de las verificaciones.
+
+  Las diferencias entre grupos describen la situación, no indican causas.
+
+✻ Brewed for 20s · done 5:48 p.m.
+
+❯ /graficando-enaho todos                                                       
+
+● Los parquet ya existen y la validación salió sin FALLIDA. Corro todos los
+  gráficos.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Reviso visualmente los cuatro PNG.
+
+  Read 4 files (ctrl+o to expand)
+
+● Generé los cuatro gráficos de pobreza monetaria 2024. Los revisé: no hay
+  textos encimados, salvo un detalle menor en el de departamentos que explico al
+  final.
+
+  Área (figuras/pobreza_area_2024.png; sumaria, n en hogares)
+  - Rural: 39.30 % (IC 95 %: 37.80–40.81)
+  - Urbana: 24.81 % (IC 95 %: 23.62–25.99)
+  - Los intervalos no se superponen, así que la diferencia es estadísticamente
+    clara. Promedio Perú: 27.6 %.
+
+  Sexo (figuras/pobreza_sexo_2024.png; personas con facpob07)
+  - Mujer: 27.68 % (26.66–28.69)
+  - Hombre: 27.37 % (26.32–28.42)
+  - Los intervalos se superponen: no hay diferencia estadísticamente clara.
+    Promedio Perú: 27.5 %.
+
+  Edad (figuras/pobreza_edad_2024.png; personas con facpob07)
+  - 0-17: 36.47 % · 18-29: 23.95 % · 30-44: 27.87 % · 45-64: 21.15 % · 65+:
+    22.74 %
+  - El grupo de 0 a 17 años es el único con todo su intervalo por encima del
+    promedio. El de 30 a 44 lo incluye y los otros tres quedan por debajo.
+
+  Departamento (figuras/pobreza_departamento_2024.png; sumaria)
+  - El más alto es Cajamarca con 45.01 % (40.84–49.17), seguido de Loreto (42.97
+    %) y Puno (39.94 %).
+  - El más bajo es Ica con 6.01 % (4.17–7.85), seguido de Moquegua (10.97 %) y
+    Madre de Dios (11.15 %).
+  - De los 25 departamentos, 9 tienen el intervalo completo por encima del
+    promedio, 9 por debajo y en 7 el intervalo incluye al promedio.
+
+  Los datos de cada gráfico están en salidas/grafico_por_<corte>_2024.csv.
+
+  Notas:
+  - El «Promedio Perú» es 27.6 % en área y departamento y 27.5 % en sexo y edad.
+    Esa décima sale de que los dos primeros usan la sumaria y los otros dos
+    usan personas; ambas cifras están en salidas/validacion.txt.
+  - El script avisó de un estrato con una sola unidad de muestreo. Para calcular
+    su intervalo lo centró en la media general, que es el ajuste habitual en
+    estos casos.
+  - En el gráfico de departamentos, la línea roja del promedio cruza las
+    etiquetas de Piura (31.9 %) y Ayacucho (32.8 %), pero se leen bien. No
+    modifiqué el script; si quieres lo ajusto.
+  - Las diferencias entre grupos solo describen la situación, no indican causas.
+    Fuente: INEI, ENAHO 2024, % de personas.
+
+✻ Sautéed for 28s · done 5:50 p.m.
+
+❯ /mapeando-enaho Haz un mapa de la pobreza monetaria por departamento con      
+ENAHO 2024                                                                      
+
+● All inputs already exist (parquets, geojson, reference CSV shown earlier).
+  Running the map script.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● El mapa está listo en mapas/pobreza_departamento_2024.png. Coincide con la
+  referencia del curso en los 25 departamentos.
+
+  Resultados
+  - Unión de datos: los 25 departamentos se unieron por código de ubigeo y todos
+    tienen dato. Lima (15) y Callao (07) aparecen por separado.
+  - Comparación con la referencia del curso: los 25 quedan a 0.1 puntos o menos.
+    La diferencia promedio es 0.03 puntos y la mayor es 0.05, en Amazonas.
+  - Coherencia: las cifras del mapa son las mismas de salidas/indicadores.csv y
+    del gráfico de barras por departamento.
+  - Lectura: el más pobre es Cajamarca (45.0 %), seguido de Loreto (43.0 %) y
+    Puno (39.9 %). El menos pobre es Ica (6.0 %), seguido de Moquegua (11.0 %) y
+    Madre de Dios (11.1 %).
+
+  Revisión visual: los 25 departamentos tienen nombre y valor, y ninguna
+  etiqueta se encima. Seis van en el mar con una línea guía: Tumbes, Lambayeque,
+  La Libertad, Callao, Moquegua y Tacna. Lo único mejorable es la etiqueta de
+  Huancavelica, que toca un poco el borde del departamento, pero se lee bien.
+
+  Notas:
+  - El script mostró una advertencia sobre el cálculo de áreas con coordenadas
+    geográficas. No afecta las cifras: ese cálculo solo decide en qué orden se
+    colocan las etiquetas.
+  - Las cifras son % de personas, ponderadas con factor07 × mieperho (sumaria de
+    hogares), igual que el gráfico de barras por departamento.
+  - Muestran diferencias entre departamentos, no sus causas. Fuente: INEI,
+    ENAHO 2024.
+
+  La comparación completa por departamento está en salidas/comparacion_mapa.csv.
+  Incluye la cifra del mapa, la referencia, la diferencia y, como contraste, la
+  cifra calculada por personas con facpob07.
+
+✻ Cogitated for 20s · done 5:54 p.m.
+
+❯ Haz un mapa de la pobreza monetaria por departamento con ENAHO 2024           
+
+● El mapa ya existe: lo hice en el paso anterior y está en
+  mapas/pobreza_departamento_2024.png. Desde entonces no ha cambiado ningún
+  dato, así que volver a correr el script daría el mismo resultado.
+
+  - Unión: los 25 departamentos tienen dato, con Lima y Callao por separado.
+  - Comparación con la referencia del curso: los 25 quedan a 0.1 puntos o menos.
+    La diferencia promedio es 0.03 puntos y la mayor es 0.05, en Amazonas.
+  - Lectura: el más pobre es Cajamarca (45.0 %), seguido de Loreto (43.0 %) y
+    Puno (39.9 %). El menos pobre es Ica (6.0 %), seguido de Moquegua (11.0 %) y
+    Madre de Dios (11.1 %).
+  - Comparación por departamento: está en salidas/comparacion_mapa.csv.
+
+  Las cifras son % de personas, ponderadas con factor07 × mieperho. Fuente:
+  INEI, ENAHO 2024. Muestran diferencias entre departamentos, no sus causas.
+
+  Si querías otra versión, dime cuál. Por ejemplo, puedo volver a generarlo de
+  todos modos o arreglar la etiqueta de Huancavelica, que toca el borde. El
+  script no tiene opción para pobreza extrema, así que un mapa de pobreza
+  extrema requeriría modificarlo.
+
+✻ Cogitated for 6s · done 5:56 p.m.

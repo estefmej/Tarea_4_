@@ -1,0 +1,59 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ Haz un mapa de la pobreza monetaria por departamento con ENAHO 2024           
+
+● Voy a usar la skill del proyecto para mapas de la ENAHO.
+
+● Skill(mapeando-enaho)
+  ⎿  Successfully loaded skill
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Faltan los parquet de personas y hogares; primero corro la skill de limpieza.
+
+● Skill(limpiando-enaho)
+  ⎿  Successfully loaded skill
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Validación 12/12 aprobada. Ahora genero el mapa.
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● El mapa está listo: mapas/pobreza_departamento_2024.png. La pobreza monetaria
+  fue más alta en Cajamarca (45.0 %) y más baja en Ica (6.0 %).
+
+  Qué hice
+  - Faltaban las bases limpias de personas y hogares
+    (salidas/personas_2024.parquet y salidas/hogares_2024.parquet), así que
+    primero corrí la limpieza de la ENAHO. Pasó las 12 verificaciones. La
+    pobreza nacional sale 27.58 % frente al 27.6 % oficial.
+  - Luego corrí el script del mapa. Une los departamentos por código de ubigeo y
+    tiene dato para los 25, con Lima y Callao por separado. Cada departamento
+    lleva su nombre y su cifra; ninguna etiqueta se encima con otra. Revisé la
+    imagen y se lee bien.
+
+  Comparación con la referencia del curso
+  - Los 25 departamentos quedan dentro de la tolerancia de 0.1 puntos
+    porcentuales.
+  - La diferencia media es 0.03 pp y la máxima es 0.05 pp (Amazonas).
+  - El mapa también coincide con salidas/indicadores.csv y con el gráfico por
+    departamento.
+
+  Departamentos más pobres: Cajamarca 45.0 %, Loreto 43.0 %, Puno 39.9 %,
+  Huánuco 39.0 % y Pasco 39.0 %.
+  Menos pobres: Ica 6.0 %, Moquegua 11.0 %, Madre de Dios 11.1 % y Lambayeque
+  14.0 %.
+
+  Las cifras son % de personas (fuente: INEI, ENAHO 2024). Están ponderadas con
+  los hogares de la sumaria (factor07 × mieperho). Comparan departamentos, pero
+  no explican por qué hay más o menos pobreza.
+
+  El detalle por departamento está en salidas/comparacion_mapa.csv. El PNG y el
+  CSV salieron idénticos a los que ya estaban en el repositorio, así que no hay
+  nada nuevo que hacer commit.
+
+✻ Sautéed for 34s · done 6:00 p.m.
