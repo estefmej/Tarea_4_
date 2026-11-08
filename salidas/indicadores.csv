@@ -32,3 +32,28 @@ departamento,25,Ucayali,27.12,3.33,544778,4143,facpob07
 nacional_contraste,PE,"Perú (sumaria, factor07 × mieperho)",27.58,5.5,34482700,33691,factor07*mieperho
 area_contraste,rural,"Rural (sumaria, factor07 × mieperho)",39.3,15.52,6595188,11660,factor07*mieperho
 area_contraste,urbano,"Urbano (sumaria, factor07 × mieperho)",24.81,3.14,27887512,22031,factor07*mieperho
+departamento_contraste,01,"Amazonas (sumaria, factor07 × mieperho)",25.75,6.01,442355,1243,factor07*mieperho
+departamento_contraste,02,"Áncash (sumaria, factor07 × mieperho)",22.77,5.8,1212494,1393,factor07*mieperho
+departamento_contraste,03,"Apurímac (sumaria, factor07 × mieperho)",23.96,5.24,494188,913,factor07*mieperho
+departamento_contraste,04,"Arequipa (sumaria, factor07 × mieperho)",15.78,1.65,1421684,1506,factor07*mieperho
+departamento_contraste,05,"Ayacucho (sumaria, factor07 × mieperho)",32.76,9.09,775447,1160,factor07*mieperho
+departamento_contraste,06,"Cajamarca (sumaria, factor07 × mieperho)",45.01,19.72,1554586,1469,factor07*mieperho
+departamento_contraste,07,"Callao (sumaria, factor07 × mieperho)",33.86,5.04,1142618,1027,factor07*mieperho
+departamento_contraste,08,"Cusco (sumaria, factor07 × mieperho)",18.54,2.1,1409467,1230,factor07*mieperho
+departamento_contraste,09,"Huancavelica (sumaria, factor07 × mieperho)",33.4,11.16,543103,1042,factor07*mieperho
+departamento_contraste,10,"Huánuco (sumaria, factor07 × mieperho)",38.96,12.2,926653,1244,factor07*mieperho
+departamento_contraste,11,"Ica (sumaria, factor07 × mieperho)",6.01,0.15,854203,1500,factor07*mieperho
+departamento_contraste,12,"Junín (sumaria, factor07 × mieperho)",18.5,3.82,1450149,1506,factor07*mieperho
+departamento_contraste,13,"La Libertad (sumaria, factor07 × mieperho)",30.19,6.56,2080789,1509,factor07*mieperho
+departamento_contraste,14,"Lambayeque (sumaria, factor07 × mieperho)",14.04,0.5,1349731,1302,factor07*mieperho
+departamento_contraste,15,"Lima (sumaria, factor07 × mieperho)",27.07,3.12,11279908,4544,factor07*mieperho
+departamento_contraste,16,"Loreto (sumaria, factor07 × mieperho)",42.97,14.98,1129071,1359,factor07*mieperho
+departamento_contraste,17,"Madre de Dios (sumaria, factor07 × mieperho)",11.15,1.53,165992,603,factor07*mieperho
+departamento_contraste,18,"Moquegua (sumaria, factor07 × mieperho)",10.97,2.38,198386,963,factor07*mieperho
+departamento_contraste,19,"Pasco (sumaria, factor07 × mieperho)",38.97,8.33,327776,865,factor07*mieperho
+departamento_contraste,20,"Piura (sumaria, factor07 × mieperho)",31.86,4.41,1988570,1611,factor07*mieperho
+departamento_contraste,21,"Puno (sumaria, factor07 × mieperho)",39.94,12.49,1586886,1123,factor07*mieperho
+departamento_contraste,22,"San Martín (sumaria, factor07 × mieperho)",22.02,4.39,947446,1347,factor07*mieperho
+departamento_contraste,23,"Tacna (sumaria, factor07 × mieperho)",23.99,2.65,380755,1271,factor07*mieperho
+departamento_contraste,24,"Tumbes (sumaria, factor07 × mieperho)",26.9,1.06,261959,842,factor07*mieperho
+departamento_contraste,25,"Ucayali (sumaria, factor07 × mieperho)",27.07,3.26,558484,1119,factor07*mieperho

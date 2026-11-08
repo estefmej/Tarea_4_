@@ -179,11 +179,14 @@ def main() -> None:
     hog = sumaria.copy()
     hog["peso"] = hog["factor07"] * hog["mieperho"]
     hog["area"] = np.where(hog["estrato"] <= 5, "urbano", "rural")
+    hog["departamento"] = hog["ubigeo"].str[:2]
     pob_sumaria = pct_ponderado(hog["pobreza"] <= 2, hog["peso"])
     contraste = []
     for grupo, codigo_g, cat, d in [("nacional_contraste", "PE", "Perú", hog),
                                     *[("area_contraste", ar, ar.capitalize(), dd)
-                                      for ar, dd in hog.groupby("area", sort=True)]]:
+                                      for ar, dd in hog.groupby("area", sort=True)],
+                                    *[("departamento_contraste", dep, DEPARTAMENTOS.get(dep, dep), dd)
+                                      for dep, dd in hog.groupby("departamento", sort=True)]]:
         contraste.append({
             "grupo": grupo, "codigo": codigo_g, "categoria": f"{cat} (sumaria, factor07 × mieperho)",
             "pobreza_pct": round(pct_ponderado(d["pobreza"] <= 2, d["peso"]), 2),
