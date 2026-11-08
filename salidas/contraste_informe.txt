@@ -1,0 +1,18 @@
+Contraste de cifras del informe final (Parte 3)
+
+[BCRP] salidas/bcrp_<codigo>.csv (descargados con graficar_serie, 2020-01 a 2024-12)
+PN01273PM inflación Lima 12 meses, diciembre de cada año: 2020: 1.97, 2021: 6.43, 2022: 8.46, 2023: 3.24, 2024: 1.97
+PN01273PM máximo: 2022-06 = 8.81; mínimo: 2020-06 = 1.60; promedio = 4.47; meses sobre 3 %: 34 de 60
+PN01206PM tipo de cambio: 2020-01 = 3.329; máximo 2021-09 = 4.109; 2024-12 = 3.737; promedio = 3.744
+PN01728AM PBI var. % interanual: mínimo 2020-04 = -39.28; máximo 2021-04 = 59.89; 2023: 8 de 12 meses negativos, promedio -0.34; 2024: promedio 3.48, 2024-12 = 5.07
+
+[ENAHO] salidas/grafico_por_area_2024.csv, grafico_por_departamento_2024.csv, comparacion_mapa.csv
+Nacional (sumaria): 27.58 % (IC 26.59-28.57)
+Urbana: 24.81 % (IC 23.62-25.99, n = 22031 hogares)
+Rural: 39.30 % (IC 37.80-40.81, n = 11660 hogares)
+Brecha rural - urbano: 14.50 pp
+Cajamarca (06): gráfico 45.01 %, mapa 45.01 %, referencia Sesión 16 45.0 %, diferencia +0.01 pp
+Ica (11): gráfico 6.01 %, mapa 6.01 %, referencia Sesión 16 6.0 %, diferencia +0.01 pp
+Lima (15): gráfico 27.07 %, mapa 27.07 %, referencia Sesión 16 27.1 %, diferencia -0.03 pp
+Departamentos a <= 0.1 pp de la referencia: 25 de 25; diferencia máxima 0.05 pp
+Gráfico vs mapa, diferencia máxima: 0.01 pp
