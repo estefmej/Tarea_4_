@@ -1,0 +1,34 @@
+grupo,codigo,categoria,pobreza_pct,pobreza_extrema_pct,poblacion_expandida,n_muestra,ponderador
+nacional,PE,Perú,27.53,5.5,34147768,108664,facpob07
+area,rural,Rural,39.44,15.6,6486385,36071,facpob07
+area,urbano,Urbano,24.74,3.13,27661382,72593,facpob07
+sexo,hombre,Hombre,27.37,5.37,16453003,52587,facpob07
+sexo,mujer,Mujer,27.68,5.62,17694764,56077,facpob07
+departamento,01,Amazonas,26.08,6.15,430252,3911,facpob07
+departamento,02,Áncash,22.88,5.76,1199410,4576,facpob07
+departamento,03,Apurímac,24.09,5.18,474458,2500,facpob07
+departamento,04,Arequipa,15.77,1.62,1415224,4645,facpob07
+departamento,05,Ayacucho,33.04,9.24,755197,3308,facpob07
+departamento,06,Cajamarca,44.99,19.62,1547849,4468,facpob07
+departamento,07,Callao,33.77,4.98,1138852,3457,facpob07
+departamento,08,Cusco,18.54,2.15,1380357,3777,facpob07
+departamento,09,Huancavelica,33.61,11.28,525028,3244,facpob07
+departamento,10,Huánuco,39.47,12.4,910900,3903,facpob07
+departamento,11,Ica,5.91,0.15,855183,4838,facpob07
+departamento,12,Junín,18.61,3.81,1436462,4658,facpob07
+departamento,13,La Libertad,30.07,6.58,2064878,5028,facpob07
+departamento,14,Lambayeque,14.05,0.5,1348585,4405,facpob07
+departamento,15,Lima,26.89,3.12,11233286,14823,facpob07
+departamento,16,Loreto,42.61,15.01,1121012,5678,facpob07
+departamento,17,Madre de Dios,11.14,1.53,165829,2045,facpob07
+departamento,18,Moquegua,10.88,2.34,196788,2511,facpob07
+departamento,19,Pasco,39.28,8.27,323033,2746,facpob07
+departamento,20,Piura,31.81,4.36,1970217,5876,facpob07
+departamento,21,Puno,40.42,12.63,1535441,3112,facpob07
+departamento,22,San Martín,21.99,4.45,937167,4619,facpob07
+departamento,23,Tacna,23.88,2.58,375607,3622,facpob07
+departamento,24,Tumbes,26.6,1.06,261973,2771,facpob07
+departamento,25,Ucayali,27.12,3.33,544778,4143,facpob07
+nacional_contraste,PE,"Perú (sumaria, factor07 × mieperho)",27.58,5.5,34482700,33691,factor07*mieperho
+area_contraste,rural,"Rural (sumaria, factor07 × mieperho)",39.3,15.52,6595188,11660,factor07*mieperho
+area_contraste,urbano,"Urbano (sumaria, factor07 × mieperho)",24.81,3.14,27887512,22031,factor07*mieperho

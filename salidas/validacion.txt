@@ -1,0 +1,21 @@
+Validación ENAHO 2024 (INEI, código 966) — skill limpiando-enaho
+Tolerancia para porcentajes: 0.1 puntos porcentuales. Todas las cifras de pobreza están ponderadas.
+Cada cifra se compara con la referencia calculada con el mismo método.
+
+[APROBADA] Llaves únicas en la sumaria (conglome, vivienda, hogar): 33,691 hogares; referencia 33,691
+[APROBADA] Hogares en la sumaria: 33,691 (referencia 33,691)
+[APROBADA] Llaves únicas en personas (conglome, vivienda, hogar, codperso): 108,664 filas
+[APROBADA] Residentes habituales: 108,664 de 117,721 filas del módulo 02 (referencia 108,664)
+[APROBADA] Unión m:1 sin perder filas: 108,664 filas tras unir; 0 personas sin hogar en la sumaria
+[APROBADA] Unión sin duplicar personas: cada persona aparece una vez
+[APROBADA] Sin vacíos en pobreza, facpob07, ubigeo, estrato y sexo: {'pobreza': 0, 'facpob07': 0, 'ubigeo': 0, 'estrato': 0, 'sexo': 0}
+[APROBADA] 25 códigos de departamento (01-25): 25 códigos: 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
+[APROBADA] Pobreza nacional (personas, facpob07) a ≤0.1 pp de 27.6 %: 27.53 % (diferencia -0.07 pp)
+[APROBADA] Pobreza nacional (sumaria, factor07 × mieperho) a ≤0.1 pp de 27.6 %: 27.58 % (diferencia -0.02 pp)
+[APROBADA] Pobreza urbana (sumaria, factor07 × mieperho) ≈ 24.8 % (≤0.1 pp): 24.81 % (diferencia +0.01 pp)
+[APROBADA] Pobreza rural (sumaria, factor07 × mieperho) ≈ 39.3 % (≤0.1 pp): 39.30 % (diferencia +0.00 pp)
+
+[INFORMATIVA] Pobreza por área con personas y facpob07 (la que usan los gráficos y el mapa): urbano 24.74 %, rural 39.44 %.
+[INFORMATIVA] Difiere de la sumaria porque en 1,846 de 33,691 hogares (5.5%) los residentes habituales del módulo 02 no coinciden con mieperho (el INEI excluye de mieperho a trabajadores del hogar y pensionistas). Son dos ponderaciones válidas; ninguna cifra se ajustó.
+
+Resultado: 12 de 12 verificaciones aprobadas.
