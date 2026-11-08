@@ -259,6 +259,110 @@ def correlacion(codigo_a: str, codigo_b: str, desde: str, hasta: str) -> dict:
             "nota": "Correlación de Pearson: asociación descriptiva entre las dos series en estos periodos. "
                     "No implica causalidad."}
 
+# ---------------------------------------------------------------------------------------------------------------
+# Gráfico para el informe. Mismo estilo que las figuras de la ENAHO (Parte 2): azul oscuro, título con el
+# hallazgo, subtítulo con unidad y periodo, nota con la fuente. Todas las cifras salen de los datos descargados.
+# ---------------------------------------------------------------------------------------------------------------
+RAIZ = AQUI.parent
+AZUL = "#1F4E79"
+GRIS_TEXTO = "#595959"
+GRIS_GRILLA = "#ebebeb"
+ESCRIBE_ARCHIVOS = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
+
+
+def _unidad(codigo):
+    """Unidad de medida: la columna del catálogo si existe; si no, el último paréntesis del nombre."""
+    f = catalogo().query("codigo == @codigo").iloc[0]
+    if str(f.get("Unidad de medida", "")).strip():
+        return str(f["Unidad de medida"]).strip()
+    parentesis = re.findall(r"\(([^()]+)\)", f"{f.grupo} {f.nombre}")
+    return parentesis[-1].strip() if parentesis else "unidad no indicada en el catálogo del BCRP"
+
+
+def _fecha(periodo):
+    """Periodo normalizado -> fecha para el eje X ("2025-T2" -> 2025-04-01, "2025" -> 2025-01-01)."""
+    if m := re.fullmatch(r"(\d{4})-T([1-4])", periodo):
+        return pd.Timestamp(int(m[1]), (int(m[2]) - 1) * 3 + 1, 1)
+    return pd.Timestamp(periodo if len(periodo) > 4 else f"{periodo}-01-01")
+
+
+def _num(x):
+    return f"{x:,.2f}"
+
+
+@mcp.tool(annotations=ESCRIBE_ARCHIVOS)
+def graficar_serie(codigo: str, desde: str, hasta: str, titulo: str = "") -> dict:
+    """Gráfico de línea de una serie del BCRP para el informe, con los datos en CSV.
+
+    Descarga la serie con la misma lógica que serie (mismos periodos y misma URL de fuente), guarda los datos
+    en salidas/bcrp_<codigo>.csv y la figura en figuras/bcrp_<codigo>.png, con el estilo de las figuras de la
+    ENAHO: línea azul oscuro, título analítico, subtítulo con unidad y periodo, y la nota
+    "Fuente: BCRP, serie <codigo>, <url>".
+    titulo: la frase con el hallazgo (p. ej. sacada de resumen). Si se deja vacío, se arma con el primer y el
+    último valor de los datos. No escriban cifras de memoria en el título: tómenlas de resumen.
+    Devuelve las rutas del PNG y del CSV, el código, el periodo efectivo (primer y último dato), n y la fuente.
+    Ejemplo: graficar_serie("PN01273PM", "2024-01", "2025-12", "La inflación ...") -> figuras/bcrp_PN01273PM.png
+    """
+    import textwrap
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    r = _obtener(codigo, desde, hasta)
+    df = pd.DataFrame(r["datos"], columns=["periodo", "valor"]).sort_values("periodo", ignore_index=True)
+    if df.empty:
+        raise ToolError(f"La serie {r['codigo']} no tiene datos entre {desde} y {hasta}. Fuente: {r['fuente']}")
+    cod, unidad = r["codigo"], _unidad(r["codigo"])
+    p0, p1 = df.periodo.iloc[0], df.periodo.iloc[-1]
+    v0, v1 = df.valor.iloc[0], df.valor.iloc[-1]
+
+    csv = RAIZ / "salidas" / f"bcrp_{cod}.csv"
+    png = RAIZ / "figuras" / f"bcrp_{cod}.png"
+    csv.parent.mkdir(parents=True, exist_ok=True)
+    png.parent.mkdir(parents=True, exist_ok=True)
+    df.assign(codigo=cod, nombre=r["nombre"], unidad=unidad, fuente=r["fuente"]).to_csv(
+        csv, index=False, encoding="utf-8")
+
+    titulo = titulo.strip() or (f"{r['nombre']}: pasó de {_num(v0)} en {p0} a {_num(v1)} en {p1}")
+    subtitulo = f"{r['nombre']}\n{unidad} · {r['frecuencia'].lower()}, {p0} a {p1} (n = {len(df)})"
+    nota = f"Fuente: BCRP, serie {cod}, {r['fuente']}. Elaboración propia."
+    if r["omitidos"]:
+        k = r["omitidos"]
+        nota += f" Se omiti{'ó' if k == 1 else 'eron'} {k} periodo{'' if k == 1 else 's'} sin dato (n.d.)."
+
+    x = df.periodo.map(_fecha)
+    fig, ax = plt.subplots(figsize=(9, 5.6), facecolor="white")
+    ax.plot(x, df.valor, color=AZUL, lw=2.2, zorder=3, marker="o" if len(df) <= 36 else None, ms=4)
+    ax.annotate(f"{_num(v1)} ({p1})", (x.iloc[-1], v1), xytext=(6, 0), textcoords="offset points",
+                va="center", ha="left", fontsize=9.5, fontweight="bold", color=AZUL)
+    ax.set_ylabel(unidad, fontsize=10, color=GRIS_TEXTO)
+    ax.yaxis.grid(True, color=GRIS_GRILLA, linewidth=0.9, zorder=0)
+    ax.set_facecolor("white")
+    for lado in ("top", "right"):
+        ax.spines[lado].set_visible(False)
+    for lado in ("left", "bottom"):
+        ax.spines[lado].set_color("#bfbfbf")
+    ax.tick_params(colors="#333333", length=0)
+    ax.set_axisbelow(True)
+    ax.margins(x=0.08)
+
+    lineas_titulo = textwrap.wrap(titulo, 70)
+    alto = 0.06 * len(lineas_titulo)
+    fig.tight_layout(rect=(0, 0.08, 1, 0.84 - alto + 0.06))
+    fig.text(0.01, 0.995, "\n".join(lineas_titulo), ha="left", va="top", fontsize=14, fontweight="bold")
+    fig.text(0.01, 0.995 - alto - 0.01, subtitulo, ha="left", va="top", fontsize=10, color=GRIS_TEXTO,
+             linespacing=1.4)
+    fig.text(0.01, 0.005, textwrap.fill(nota, 120), ha="left", va="bottom", fontsize=7.5, color=GRIS_TEXTO)
+    fig.savefig(png, dpi=200, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+
+    return {"codigo": cod, "nombre": r["nombre"], "unidad": unidad, "frecuencia": r["frecuencia"],
+            "periodo": {"desde": p0, "hasta": p1}, "n": int(len(df)), "omitidos": r["omitidos"],
+            "figura": png.relative_to(RAIZ).as_posix(), "datos": csv.relative_to(RAIZ).as_posix(),
+            "titulo": titulo, "fuente": r["fuente"]}
+
+
 @mcp.resource("bcrp://serie/{codigo}", mime_type="application/json")
 def ficha_serie(codigo: str) -> dict:
     """Ficha descriptiva de una serie del BCRP: nombre, categoría, frecuencia, inicio, última actualización

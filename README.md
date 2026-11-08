@@ -32,6 +32,23 @@ El catálogo de series (~17 mil) se descarga la primera vez a `mcp/datos/`, que 
 | `serie(codigo, desde, hasta)` | Datos de la serie con periodos normalizados, valores `n.d.` omitidos y `fuente` = URL consultada. |
 | `resumen(codigo, desde, hasta)` | Primero, último, cambio, variación %, promedio, máximo y mínimo con su periodo (pandas). |
 | `correlacion(codigo_a, codigo_b, desde, hasta)` | **Herramienta propia.** Correlación de Pearson entre dos series de la misma frecuencia: alinea periodos, descarta faltantes, exige ≥ 3 periodos y devuelve coeficiente, n, periodos, descartados, fuentes y una nota de que es una asociación descriptiva, no causal. |
+| `graficar_serie(codigo, desde, hasta, titulo)` | **Para el informe (Parte 3).** Descarga la serie con la misma lógica que `serie` y guarda los datos en `salidas/bcrp_<codigo>.csv` y un gráfico de línea en `figuras/bcrp_<codigo>.png`. Devuelve las rutas, el código, el periodo efectivo (primer y último dato), n y la fuente. |
+
+### `graficar_serie`: gráfico para el informe
+
+Usa el mismo estilo que las figuras de la ENAHO de la Parte 2: línea azul oscuro (`#1F4E79`), título
+analítico en negrita, subtítulo con el nombre de la serie, la **unidad**, la frecuencia y el **periodo**, y la
+nota `Fuente: BCRP, serie <codigo>, <url>` con la URL exacta consultada. El último valor se rotula en la línea.
+
+- `titulo`: la frase con el hallazgo. Sus cifras deben salir de `resumen`, no de memoria. Si se deja vacío,
+  se arma solo con el primer y el último valor de los datos descargados.
+- La unidad se toma de la columna «Unidad de medida» del catálogo; si está vacía, del último paréntesis del
+  nombre de la serie (p. ej. `var% 12 meses`, `S/ por US$`).
+- Si hubo periodos sin dato (`n.d.`), la nota dice cuántos se omitieron.
+- El CSV trae `periodo`, `valor`, `codigo`, `nombre`, `unidad` y `fuente`, para verificar cada cifra.
+
+Ejemplo: `graficar_serie("PN01273PM", "2024-01", "2025-12", "<hallazgo tomado de resumen>")` →
+`figuras/bcrp_PN01273PM.png` y `salidas/bcrp_PN01273PM.csv`.
 
 ### Recurso y prompt
 
@@ -89,7 +106,7 @@ claude mcp add --scope project bcrp -- uv run mcp/server.py
 
 Al abrir `claude` en esta carpeta, apruebe el servidor `bcrp`. Luego:
 
-- `/mcp` → `bcrp` debe aparecer conectado con 4 herramientas.
+- `/mcp` → `bcrp` debe aparecer conectado con 5 herramientas.
 - `@bcrp:bcrp://serie/PN01273PM` → adjunta la ficha de la serie.
 - `/bcrp:informe` (o `/mcp__bcrp__informe`) → prompt de informe con citas.
 
@@ -200,12 +217,12 @@ Indicadores principales (`salidas/indicadores.csv`; los 25 departamentos están 
 ## Estructura
 
 ```
-mcp/server.py         servidor MCP (herramientas, recurso y prompt)
+mcp/server.py         servidor MCP (5 herramientas, recurso y prompt)
 mcp/test_server.py    8 pruebas originales (no se modifican)
 mcp/test_propia.py    2 pruebas de la herramienta correlacion
 .claude/skills/       limpiando-enaho, graficando-enaho y mapeando-enaho (Parte 2)
 scripts/              actualizar_readme.py (cifras de la Parte 2 en el README)
 salidas/              pruebas del MCP, validación, indicadores y comparación del mapa
-figuras/ mapas/       gráficos y mapa de la ENAHO 2024
+figuras/ mapas/       gráficos y mapa de la ENAHO 2024; gráficos del BCRP (bcrp_<codigo>.png)
 integracion/ evaluacion/ evidencias_ia/   partes 3–4 y evidencias
 ```
