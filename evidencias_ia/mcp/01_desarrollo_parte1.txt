@@ -1,0 +1,814 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ # Tarea 4 – Agente de investigación socioeconómica del Perú                   
+  Referencia oficial:                                                           
+  https://github.com/d2cml-ai/Data-Science-Python/issues/201                    
+                                                                                
+  ## La pregunta que queremos responder                                         
+  Quiero construir un agente que responda, con datos oficiales y verificables:  
+                                                                                
+  > "¿Cómo fue la pobreza monetaria en el Perú en 2024 por área y departamento, 
+  > y en qué contexto macroeconómico (inflación, tipo de cambio, actividad      
+  > económica) ocurrió?"                                                        
+                                                                                
+  usando la ENAHO 2024 del INEI y las series del BCRP. El agente no responde de 
+  memoria: usa herramientas que procesan datos y citan su fuente.               
+                                                                                
+  El proyecto tiene cuatro partes:                                              
+  1. **Servidor MCP del BCRP** → datos macroeconómicos. ← *esta sesión*         
+  2. Skills de ENAHO → pobreza e indicadores de hogares.                        
+  3. Integración: el agente combina ambas fuentes para responder.               
+  4. Evaluación, documentación y reproducibilidad.                              
+                                                                                
+  ## Esta sesión: Parte 1 – Servidor MCP del BCRP [5 pts]                       
+  Entorno: Windows con PowerShell. Adapta los comandos a PowerShell y usa       
+  `$env:TEMP` para archivos temporales.                                         
+                                                                                
+  **Si la carpeta ya tiene trabajo previo:** revisa primero qué existe          
+  (`git log --oneline`, archivos, `uv run pytest -q`) y completa solo lo que    
+  falte, sin rehacer lo que ya funciona.                                        
+                                                                                
+  **Antes de empezar:** explícame en 5-8 pasos sencillos lo que vas a hacer y   
+  cómo ayuda a responder la pregunta. Espera mi OK.                             
+  **Al terminar:** resumen simple de lo hecho, qué archivo hace qué, y cómo     
+  explicar el parseo de fechas en 3-4 frases.                                   
+                                                                                
+  ## Pasos                                                                      
+  1. **Preparar.** Verifica `uv` y `git`, y que la carpeta superior NO sea otro 
+     repo Git (`git -C .. rev-parse --show-toplevel`; si lo es, detente y       
+     avísame). Si no existe, `git init` (rama `main`). No configures remoto ni  
+     hagas push: yo publicaré con GitHub Desktop.                               
+     `uv add "fastmcp>=4,<5" httpx pandas` y `uv add --dev pytest`.             
+     Descarga a `mcp/` los originales de la Sesión 04:                          
+     `https://raw.githubusercontent.com/d2cml-ai/Data-Science-Python/main/sessi 
+  ons/04-mcp-claude-code/proyecto/server.py`                                    
+     y `.../proyecto/test_server.py`, y guarda una copia del test en            
+  `$env:TEMP`.                                                                  
+     No crees `mcp/__init__.py` (chocaría con el paquete `mcp` de FastMCP). En  
+     `pyproject.toml`: `[tool.pytest.ini_options]` con `testpaths = ["mcp"]` y  
+     `pythonpath = ["mcp"]`. `.gitignore` con `datos/`, `mcp/datos/`, `.venv/`, 
+     cachés, `.env`, `*.zip`, `*.dta` y temporales. Crea `evidencias_ia/mcp/`,  
+     `skills/`, `integracion/` y `evaluacion/` con `.gitkeep`.                  
+  2. **`serie`** (TODO 1). Separa el parseo en dos funciones comentadas:        
+     `_periodo_api` (lo que pide la API) y `_normalizar_periodo` (lo que        
+     devuelve): `Ene.2025`→`2025-01`, `Set.2025`→`2025-09`,                     
+     `01.Oct.26`→`2026-10-01`, `T1.25`→`2025-T1`, `2025`→`2025`. Diccionario de 
+     meses en español (con `Set` y `Sep`), sin depender del locale. Omite       
+  `n.d.`,                                                                       
+     reintenta si la API devuelve HTML, `ToolError` con el código si no existe, 
+     y `fuente` = URL consultada. Muéstrame cada caso ejecutado.                
+  3. **`resumen`** (TODO 2): primero, último, cambio, variación %, promedio,    
+     máximo y mínimo con su periodo, calculados con pandas.                     
+  4. **Herramienta propia `correlacion(codigo_a, codigo_b, desde, hasta)`**:    
+     alinea periodos, descarta faltantes, exige misma frecuencia y ≥3 periodos; 
+     devuelve coeficiente, n, periodos, descartados, fuentes y una nota de que  
+     es una asociación descriptiva, no causal. Docstring con qué hace, cuándo   
+     usarla y un ejemplo.                                                       
+  5. **Recurso** `bcrp://serie/{codigo}` con la ficha descriptiva de la serie,  
+  y                                                                             
+     **prompt** `informe(tema)` que exija citar código, periodo y fuente de     
+  cada                                                                          
+     cifra y no presentar asociaciones como causales.                           
+  6. **Pruebas.** No modifiques `test_server.py`. Crea `mcp/test_propia.py` con 
+  2                                                                             
+     pruebas: correlación de `PN01273PM` consigo misma ≈ 1 con 12 periodos, y   
+     `ToolError` con frecuencias distintas (`PD04638PD`). Meta exacta:          
+     `10 passed`. Compara `test_server.py` con la copia original y confirma que 
+     no cambió. Guarda la salida de `uv run pytest -v` en                       
+     `salidas/pruebas_mcp.txt`.                                                 
+  7. **Conectar.** `claude mcp add --scope project bcrp -- uv run               
+  mcp/server.py`.                                                               
+     Muéstrame `.mcp.json` (sin claves ni rutas personales) y dime qué probar   
+  yo                                                                            
+     en una sesión nueva: `/mcp`, una pregunta de inflación que deba responder  
+     con código de serie, periodo y fuente, el recurso con `@` y el prompt con  
+  `/`.                                                                          
+  8. **README**: pregunta de investigación, las 4 partes, herramientas MCP,     
+     recurso, prompt, parseo de fechas, instalación con `uv sync`, cómo correr  
+     las pruebas y cómo conectar el servidor a Claude Code.                     
+                                                                                
+  ## Reglas                                                                     
+  - Todo cálculo en Python; ninguna cifra escrita a mano como resultado.        
+  - No modifiques las 8 pruebas originales para que pasen.                      
+  - Commit descriptivo en español (Conventional Commits) al cerrar cada paso.   
+    Antes de cada uno, revisa `git status` y usa `git add` con rutas            
+  explícitas:                                                                   
+    no subas `datos/`, `mcp/datos/`, `.venv/`, cachés, temporales, `.env`,      
+    claves API, tokens, contraseñas ni datos personales. Si encuentras algo     
+    sensible, detente y avísame.                                                
+  - Si algo falla, explícame la causa antes de corregir. No avances sin         
+    mostrarme los resultados.                                                   
+  - Al final, muéstrame `git log --oneline` y un checklist de la rúbrica:       
+    servidor con búsqueda, consulta y resumen (2.0); herramienta propia útil,   
+    validada y documentada (1.0); recurso, prompt e integración (1.0);          
+    10 pruebas aprobadas (1.0).                                                 
+  - Recuérdame: publicar con GitHub Desktop como repositorio **público**;       
+    verificar en el navegador que no aparezcan `.venv` ni `datos`; hacer las    
+    pruebas en una sesión nueva; y exportar con `/export` a                     
+  `evidencias_ia/mcp/`                                                          
+    esta conversación y la sesión de prueba, ocultando claves, tokens y datos   
+    personales.                                                                 
+
+● Primero reviso qué hay ya en la carpeta. Luego te explico el plan y espero tu
+  OK.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Revisé la carpeta: está vacía, así que empezamos desde cero. La carpeta
+  superior no es un repo Git (bien), y uv 0.12.15 y git 2.55 están instalados.
+
+  Plan (Parte 1: servidor MCP del BCRP)
+
+  1. Preparar el proyecto. Hago git init en la rama main, instalo fastmcp,
+     httpx, pandas y pytest con uv, y descargo server.py y test_server.py de la
+     Sesión 04 a mcp/. También guardo una copia del test en $env:TEMP. Configuro
+     pytest y .gitignore y creo las carpetas de las partes 2 a 4. Esto deja una
+     base limpia y reproducible para todo el agente.
+  2. Herramienta serie. Descarga una serie del BCRP y convierte las fechas en
+     español (Ene.2025, Set.2025, T1.25…) a un formato estándar (2025-01,
+     2025-T1…). Omite valores n.d., reintenta si la API falla y siempre devuelve
+     la URL usada como fuente. Así cada cifra de inflación o tipo de cambio
+     será verificable.
+  3. Herramienta resumen. Calcula con pandas el primer y último valor, el
+     cambio, la variación %, el promedio, el máximo y el mínimo, cada uno con su
+     periodo. Sirve para describir el contexto macro de 2024 en pocas cifras.
+  4. Herramienta propia correlacion. Alinea dos series del mismo tipo de
+     frecuencia y calcula su coeficiente de correlación. Aclara que es una
+     asociación descriptiva, no una causa. Sirve, por ejemplo, para ver si
+     inflación y tipo de cambio se movieron juntos.
+  5. Recurso y prompt. El recurso bcrp://serie/{codigo} da la ficha descriptiva
+     de una serie. El prompt informe(tema) obliga al agente a citar el código,
+     el periodo y la fuente de cada cifra, y a no presentar asociaciones como
+     causas.
+  6. Pruebas. Creo mcp/test_propia.py con 2 pruebas nuevas. La meta es 10 
+     passed. Confirmo que test_server.py sigue igual que el original y guardo la
+     salida en salidas/pruebas_mcp.txt.
+  7. Conectar y documentar. Registro el servidor en Claude Code (.mcp.json),
+     escribo el README y te digo qué probar en una sesión nueva.
+
+  Al cerrar cada paso hago un commit en español con rutas explícitas, sin push.
+  Si algo falla, te explico la causa antes de corregirlo.
+
+  ¿Me das el OK para empezar?
+
+✻ Cogitated for 13s · done 9:40 a.m.
+
+❯ ok                                                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The init worked; the red text is just PowerShell showing uv's normal stderr
+  messages. Now I'll read the downloaded files.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ahora agrego la configuración de pytest, el .gitignore y las carpetas de las
+  otras partes.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Todo está en orden: .venv no aparece en el estado. Hago el commit del paso 1.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 1 listo. Antes de escribir serie, consulto la API real para ver qué
+  formato devuelve en cada frecuencia.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La API acepta Sep para septiembre (y también Set), pero un código inexistente
+  devuelve HTML, así que verifico el código contra el catálogo antes de
+  llamarla. Ahora escribo serie.
+
+● Update(mcp\server.py)
+  ⎿  Added 111 lines, removed 10 lines
+       78      return [_ficha(c) for c in orden.sort_values(["vieja", "la
+           rgo"]).head(limite).codigo]
+       79  
+       80  
+       81 -# TODO 1 · serie(codigo, desde, hasta) -> {"codigo", "nombre",
+          - "frecuencia", "datos": [{"periodo", "valor"}], "fuente"}     
+       82 -#   La API se llama así: f"{API}/{codigo}/json/{desde}/{hasta}
+          -" y responde                                                  
+       83 -#   {"config": {...}, "periods": [{"name": "Ene.2025", "values
+          -": ["0.81"]}, ...]}                                           
+       84 -#   - Fechas que pide la API: 2025-1 (mensual y trimestral), 2
+          -025-01-15 (diaria), 2025 (anual).                             
+       85 -#   - Nombres que devuelve: "Ene.2025" (mensual), "01.Oct.26" 
+          -(diaria), "T1.25" (trimestral), "2025" (anual).               
+       86 -#     Setiembre viene como "Set". Devuelvan el periodo como "2
+          -025-01", "2026-10-01", "2025-T1" o "2025".                    
+       87 -#   - Salten los valores "n.d." y usen la frecuencia de _ficha
+          -(codigo) para saber qué formato pedir.                        
+       88 -#   - Si recibe muchos pedidos seguidos, la API responde una p
+          -ágina HTML en vez de JSON: esperen unos segundos y            
+       89 -#     reintenten (y guarden en caché lo que ya bajaron).      
+       90 -#   - Un código que no existe debe dar un ToolError que diga e
+          -l código.                                                     
+       81 +# ------------------------------------------------------------
+          +---------------------------------------------------           
+       82 +# Fechas. La API del BCRP usa un formato para lo que se le PID
+          +E y otro distinto para lo que DEVUELVE.                       
+       83 +# Por eso hay dos funciones: _periodo_api traduce nuestro peri
+          +odo al que pide la API y _normalizar_periodo                  
+       84 +# traduce el que devuelve la API a uno estándar y ordenable. L
+          +os meses van en un diccionario propio, así                    
+       85 +# el resultado no depende del idioma (locale) de la computador
+          +a.                                                            
+       86 +# ------------------------------------------------------------
+          +---------------------------------------------------           
+       87 +MESES = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "ju
+          +n": 6, "jul": 7, "ago": 8,                                    
+       88 +         "set": 9, "sep": 9,  # el BCRP usa ambas formas para 
+          +setiembre                                                     
+       89 +         "oct": 10, "nov": 11, "dic": 12}                     
+       90  
+       91 +                                                              
+       92 +def _anio_completo(aa):                                       
+       93 +    """Años de dos dígitos ("26" -> 2026, "97" -> 1997), con e
+          +l mismo corte que Python usa en %y."""                        
+       94 +    aa = int(aa)                                              
+       95 +    return 2000 + aa if aa < 69 else 1900 + aa                
+       96 +                                                              
+       97 +                                                              
+       98 +def _periodo_api(periodo, frecuencia, fin=False):             
+       99 +    """Lo que PIDE la API, según la frecuencia de la serie.   
+      100 +                                                              
+      101 +    Acepta "2025", "2025-03", "2025-03-15" o "2025-T1" y devue
+          +lve:                                                          
+      102 +      Diaria -> "2025-03-15"   Mensual -> "2025-3"   Trimestra
+          +l -> "2025-1"   Anual -> "2025"                               
+      103 +    Si el periodo es menos preciso que la serie (p. ej. "2025"
+          + en una serie mensual), fin=False toma el                     
+      104 +    inicio y fin=True el final ("2025" -> "2025-1" para desde 
+          +y "2025-12" para hasta).                                      
+      105 +    """                                                       
+      106 +    p = str(periodo).strip().upper()                          
+      107 +    m = re.fullmatch(r"(\d{4})(?:-(T[1-4]|\d{1,2})(?:-(\d{1,2}
+          +))?)?", p)                                                    
+      108 +    if not m:                                                 
+      109 +        raise ToolError(f"Periodo {periodo!r} no válido. Usen 
+          +2025, 2025-03, 2025-03-15 o 2025-T1.")                        
+      110 +    anio, medio, dia = int(m[1]), m[2], m[3]                  
+      111 +    if medio and medio.startswith("T"):          # trimestre -
+          +> su primer o último mes                                      
+      112 +        mes = (int(medio[1]) - 1) * 3 + (3 if fin else 1)     
+      113 +    elif medio:                                               
+      114 +        mes = int(medio)                                      
+      115 +        if not 1 <= mes <= 12:                                
+      116 +            raise ToolError(f"Mes fuera de rango en {periodo!r
+          +}.")                                                          
+      117 +    else:                                                     
+      118 +        mes = 12 if fin else 1                                
+      119 +    f = frecuencia.lower()                                    
+      120 +    if f.startswith("diaria"):                                
+      121 +        if dia is None:                          # sin día: pr
+          +imer o último día del mes                                     
+      122 +            dia = pd.Period(f"{anio}-{mes:02d}", "M").days_in_
+          +month if fin else 1                                           
+      123 +        return pd.Timestamp(anio, mes, int(dia)).strftime("%Y-
+          +%m-%d")                                                       
+      124 +    if f.startswith("mensual"):                               
+      125 +        return f"{anio}-{mes}"                                
+      126 +    if f.startswith("trimestral"):                            
+      127 +        return f"{anio}-{(mes - 1) // 3 + 1}"                 
+      128 +    return str(anio)                             # anual      
+      129 +                                                              
+      130 +                                                              
+      131 +def _normalizar_periodo(nombre):                              
+      132 +    """Lo que DEVUELVE la API, llevado a un formato estándar q
+          +ue se ordena bien como texto.                                 
+      133 +                                                              
+      134 +      "Ene.2025" -> "2025-01"    "Set.2025" -> "2025-09"    "0
+          +1.Oct.26" -> "2026-10-01"                                     
+      135 +      "T1.25"    -> "2025-T1"    "2025"     -> "2025"         
+      136 +    """                                                       
+      137 +    s = str(nombre).strip()                                   
+      138 +    if m := re.fullmatch(r"([A-Za-z]{3})\.(\d{4})", s):       
+          +          # mensual                                           
+      139 +        return f"{m[2]}-{MESES[m[1].lower()]:02d}"            
+      140 +    if m := re.fullmatch(r"(\d{1,2})\.([A-Za-z]{3})\.(\d{2,4})
+          +", s):    # diaria                                            
+      141 +        anio = int(m[3]) if len(m[3]) == 4 else _anio_completo
+          +(m[3])                                                        
+      142 +        return f"{anio}-{MESES[m[2].lower()]:02d}-{int(m[1]):0
+          +2d}"                                                          
+      143 +    if m := re.fullmatch(r"T([1-4])\.(\d{2,4})", s, re.IGNOREC
+          +ASE):     # trimestral                                        
+      144 +        anio = int(m[2]) if len(m[2]) == 4 else _anio_completo
+          +(m[2])                                                        
+      145 +        return f"{anio}-T{m[1]}"                              
+      146 +    if re.fullmatch(r"\d{4}", s):                             
+          +          # anual                                             
+      147 +        return s                                              
+      148 +    raise ValueError(f"Formato de periodo del BCRP no reconoci
+          +do: {nombre!r}")                                              
+      149 +                                                              
+      150 +                                                              
+      151 +@cache                                                        
+      152 +def _descargar(url, intentos=4):                              
+      153 +    """Pide JSON a la API. Si responde HTML (límite de pedidos
+          +), espera y reintenta. Guarda en caché."""                    
+      154 +    for i in range(intentos):                                 
+      155 +        try:                                                  
+      156 +            r = httpx.get(url, timeout=60, follow_redirects=Tr
+          +ue)                                                           
+      157 +            if r.status_code == 200 and r.text.lstrip().starts
+          +with("{"):                                                    
+      158 +                return r.json()                               
+      159 +        except (httpx.HTTPError, ValueError):                 
+      160 +            pass                                              
+      161 +        time.sleep(2 * (i + 1))                               
+      162 +    raise ToolError(f"La API del BCRP no devolvió datos tras {
+          +intentos} intentos: {url}")                                   
+      163 +                                                              
+      164 +                                                              
+      165 +def _obtener(codigo, desde, hasta):                           
+      166 +    """Ficha + datos de una serie, sin pasar por MCP (lo reuti
+          +lizan serie, resumen y correlacion)."""                       
+      167 +    ficha = _ficha(codigo.strip().upper())       # ToolError c
+          +laro si el código no existe                                   
+      168 +    d, h = _periodo_api(desde, ficha["frecuencia"]), _periodo_
+          +api(hasta, ficha["frecuencia"], fin=True)                     
+      169 +    url = f"{API}/{ficha['codigo']}/json/{d}/{h}"             
+      170 +    datos, omitidos = [], 0                                   
+      171 +    for p in _descargar(url).get("periods", []):              
+      172 +        valor = (p.get("values") or ["n.d."])[0]              
+      173 +        try:                                                  
+      174 +            datos.append({"periodo": _normalizar_periodo(p["na
+          +me"]), "valor": float(valor)})                                
+      175 +        except (TypeError, ValueError):          # "n.d." y si
+          +milares: no hay dato ese periodo                              
+      176 +            omitidos += 1                                     
+      177 +    return {**ficha, "datos": datos, "omitidos": omitidos, "fu
+          +ente": url}                                                   
+      178 +                                                              
+      179 +                                                              
+      180 +@mcp.tool(annotations=SOLO_LECTURA)                           
+      181 +def serie(codigo: str, desde: str, hasta: str) -> dict:       
+      182 +    """Datos de una serie del BCRP entre dos periodos (inclusi
+          +ve).                                                          
+      183 +                                                              
+      184 +    codigo: el código de buscar_series, p. ej. "PN01273PM" (IP
+          +C, var. % 12 meses).                                          
+      185 +    desde / hasta: "2025", "2025-03", "2025-03-15" o "2025-T1"
+          +; se adaptan a la frecuencia de la serie.                     
+      186 +    Devuelve el periodo normalizado ("2025-01", "2026-10-01", 
+          +"2025-T1" o "2025") y el valor de cada dato,                  
+      187 +    cuántos periodos sin dato ("n.d.") se omitieron y en "fuen
+          +te" la URL exacta consultada: cítenla.                        
+      188 +    """                                                       
+      189 +    r = _obtener(codigo, desde, hasta)                        
+      190 +    return {k: r[k] for k in ("codigo", "nombre", "frecuencia"
+          +, "datos", "omitidos", "fuente")}                             
+      191 +                                                              
+      192 +                                                              
+      193  # TODO 2 · resumen(codigo, desde, hasta): primero, ultimo, cam
+           bio, variacion_pct, promedio, maximo y minimo
+      194  #   (los tres últimos con su periodo). Úsenla para que el mode
+           lo nunca haga cuentas a mano.
+      195  
+
+● Update(mcp\server.py)
+  ⎿  Added 1 line
+       7  Las cuentas las hace Python, no el modelo: así cada cifra sale 
+          de una llamada que se puede repetir.
+       8  """
+       9  import re
+      10 +import time                                                    
+      11  import unicodedata
+      12  from functools import cache
+      13  from pathlib import Path
+
+● Ahora ejecuto cada caso de fechas y de error que pediste.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All cases pass and the error names the missing code; the garbled characters
+  like cat�logo are only the Windows console showing accents, not bad data. I'm
+  next checking that n.d. values are skipped, using exchange-rate days around
+  Peru's national holidays.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The 3 holiday days with n.d. are skipped and counted. Now I'll run the
+  official tests to see how far we've got.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 4 pass, including both serie tests and the missing-code error. The other 4
+  fail because resumen, my own tool, the resource and the prompt don't exist
+  yet. That's expected. Committing step 2:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 3: resumen.
+
+● Update(mcp\server.py)
+  ⎿  Added 30 lines, removed 2 lines
+      191      return {k: r[k] for k in ("codigo", "nombre", "frecuencia"
+           , "datos", "omitidos", "fuente")}
+      192  
+      193  
+      194 -# TODO 2 · resumen(codigo, desde, hasta): primero, ultimo, cam
+          -bio, variacion_pct, promedio, maximo y minimo                 
+      195 -#   (los tres últimos con su periodo). Úsenla para que el mode
+          -lo nunca haga cuentas a mano.                                 
+      194 +def _punto(df, i):                                            
+      195 +    return {"periodo": df.periodo.loc[i], "valor": float(df.va
+          +lor.loc[i])}                                                  
+      196  
+      197 +                                                              
+      198 +@mcp.tool(annotations=SOLO_LECTURA)                           
+      199 +def resumen(codigo: str, desde: str, hasta: str) -> dict:     
+      200 +    """Estadísticas de una serie del BCRP entre dos periodos, 
+          +calculadas con pandas: úsenla en vez de hacer                 
+      201 +    cuentas a mano.                                           
+      202 +                                                              
+      203 +    Devuelve primero y ultimo (periodo y valor), cambio (ultim
+          +o - primero), variacion_pct (cambio relativo                  
+      204 +    al primero, en %; None si el primero es 0), promedio, maxi
+          +mo y minimo (con su periodo), n, la fuente                    
+      205 +    y los periodos omitidos por no tener dato. Ojo: si la seri
+          +e ya es una variación % (p. ej. el IPC a 12                   
+      206 +    meses), "cambio" está en puntos porcentuales.             
+      207 +    Ejemplo: resumen("PN01273PM", "2024-01", "2024-12") -> inf
+          +lación a 12 meses durante 2024.                               
+      208 +    """                                                       
+      209 +    r = _obtener(codigo, desde, hasta)                        
+      210 +    df = pd.DataFrame(r["datos"])                             
+      211 +    if df.empty:                                              
+      212 +        raise ToolError(f"La serie {r['codigo']} no tiene dato
+          +s entre {desde} y {hasta}. Fuente: {r['fuente']}")            
+      213 +    df = df.sort_values("periodo", ignore_index=True)         
+      214 +    primero, ultimo = df.valor.iloc[0], df.valor.iloc[-1]     
+      215 +    cambio = ultimo - primero                                 
+      216 +    return {"codigo": r["codigo"], "nombre": r["nombre"], "fre
+          +cuencia": r["frecuencia"],                                    
+      217 +            "primero": _punto(df, 0), "ultimo": _punto(df, len
+          +(df) - 1),                                                    
+      218 +            "cambio": float(cambio),                          
+      219 +            "variacion_pct": None if primero == 0 else float(c
+          +ambio / abs(primero) * 100),                                  
+      220 +            "promedio": float(df.valor.mean()),               
+      221 +            "maximo": _punto(df, df.valor.idxmax()), "minimo":
+          + _punto(df, df.valor.idxmin()),                               
+      222 +            "n": int(len(df)), "omitidos": r["omitidos"], "fue
+          +nte": r["fuente"]}                                            
+      223 +                                                              
+      224 +                                                              
+      225  # TODO 3 · Una herramienta suya, bien descrita. Ideas:
+      226  #   - comparar_paises con la API del Banco Mundial, que tampoc
+           o pide clave:
+      227  #     https://api.worldbank.org/v2/country/PER;CHL;COL/indicat
+           or/NY.GDP.MKTP.KD.ZG?format=json&date=2015:2025
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● resumen works (above: 2024 inflation for Lima, computed in Python). 5 of 8
+  tests now pass. Committing step 3:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 4: la herramienta propia correlacion.
+
+● Update(mcp\server.py)
+  ⎿  Added 35 lines, removed 5 lines
+      222              "n": int(len(df)), "omitidos": r["omitidos"], "fue
+           nte": r["fuente"]}
+      223  
+      224  
+      225 -# TODO 3 · Una herramienta suya, bien descrita. Ideas:        
+      226 -#   - comparar_paises con la API del Banco Mundial, que tampoc
+          -o pide clave:                                                 
+      227 -#     https://api.worldbank.org/v2/country/PER;CHL;COL/indicat
+          -or/NY.GDP.MKTP.KD.ZG?format=json&date=2015:2025               
+      228 -#   - correlacion(codigo_a, codigo_b, desde, hasta)           
+      229 -#   - grafico(codigo, desde, hasta) que guarde un PNG en salid
+          -as/ y devuelva la ruta                                        
+      225 +@mcp.tool(annotations=SOLO_LECTURA)                           
+      226 +def correlacion(codigo_a: str, codigo_b: str, desde: str, hast
+          +a: str) -> dict:                                              
+      227 +    """Correlación de Pearson entre dos series del BCRP de la 
+          +misma frecuencia, en los periodos que ambas tienen.           
+      228  
+      229 +    Qué hace: baja las dos series, las alinea por periodo, des
+          +carta los periodos donde falta alguna y calcula               
+      230 +    el coeficiente (de -1 a 1) con pandas.                    
+      231 +    Cuándo usarla: para describir si dos indicadores se movier
+          +on juntos en un periodo, p. ej. inflación y                   
+      232 +    tipo de cambio, o tasa de referencia e inflación. Exige la
+          + misma frecuencia (Mensual con Mensual, etc.)                 
+      233 +    y al menos 3 periodos comunes; si no, da un ToolError.    
+      234 +    Ojo: es una asociación descriptiva, NO prueba causalidad. 
+          +No la presenten como causa y efecto.                          
+      235 +    Ejemplo: correlacion("PN01273PM", "PN01207PM", "2024-01", 
+          +"2024-12") -> inflación a 12 meses frente                     
+      236 +    al tipo de cambio mensual durante 2024.                   
+      237 +    Devuelve coeficiente, n, periodos usados, periodos descart
+          +ados, las fuentes y una nota.                                 
+      238 +    """                                                       
+      239 +    fa, fb = _ficha(codigo_a.strip().upper()), _ficha(codigo_b
+          +.strip().upper())                                             
+      240 +    if fa["frecuencia"] != fb["frecuencia"]:                  
+      241 +        raise ToolError(f"Frecuencias distintas: {fa['codigo']
+          +} es {fa['frecuencia']} y {fb['codigo']} es "                 
+      242 +                        f"{fb['frecuencia']}. Elijan dos serie
+          +s con la misma frecuencia.")                                  
+      243 +    a, b = _obtener(fa["codigo"], desde, hasta), _obtener(fb["
+          +codigo"], desde, hasta)                                       
+      244 +    sa = pd.DataFrame(a["datos"], columns=["periodo", "valor"]
+          +).set_index("periodo").valor.rename("a")                      
+      245 +    sb = pd.DataFrame(b["datos"], columns=["periodo", "valor"]
+          +).set_index("periodo").valor.rename("b")                      
+      246 +    junto = pd.concat([sa, sb], axis=1).sort_index()          
+          + # unión de periodos: los faltantes quedan NaN                
+      247 +    completos = junto.dropna()                                
+      248 +    descartados = sorted(set(junto.index) - set(completos.inde
+          +x))                                                           
+      249 +    if len(completos) < 3:                                    
+      250 +        raise ToolError(f"Solo hay {len(completos)} periodos c
+          +on dato en ambas series entre {desde} y {hasta}; "            
+      251 +                        "se necesitan al menos 3.")           
+      252 +    coef = completos.a.corr(completos.b)                      
+      253 +    return {"codigo_a": fa["codigo"], "nombre_a": fa["nombre"]
+          +, "codigo_b": fb["codigo"], "nombre_b": fb["nombre"],         
+      254 +            "frecuencia": fa["frecuencia"],                   
+      255 +            "coeficiente": None if pd.isna(coef) else float(co
+          +ef),  # NaN si una serie es constante                         
+      256 +            "n": int(len(completos)), "periodos": list(complet
+          +os.index), "descartados": descartados,                        
+      257 +            "fuentes": [a["fuente"], b["fuente"]],            
+      258 +            "nota": "Correlación de Pearson: asociación descri
+          +ptiva entre las dos series en estos periodos. "               
+      259 +                    "No implica causalidad."}                 
+      260 +                                                              
+      261  # TODO 4 · Un recurso, por ejemplo la plantilla bcrp://serie/{
+           codigo} con la ficha de la serie.
+      262  
+      263  # TODO 5 · Un prompt, por ejemplo informe(tema) que pida citar
+            el código y el periodo de cada cifra.
+
+  Ran 1 shell command (ctrl+o to expand)
+● The correlacion function checks out: inflation against the monthly exchange
+  rate for 2024 gives r ≈ 0.17 over 12 periods, and it rejects mismatched
+  frequencies and fewer than 3 periods. Periods that are n.d. in both series are
+  not counted as discarded, and I'm committing step 4 next.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 5: el recurso y el prompt.
+
+● Update(mcp\server.py)
+  ⎿  Added 22 lines, removed 2 lines
+      258              "nota": "Correlación de Pearson: asociación descri
+           ptiva entre las dos series en estos periodos. "
+      259                      "No implica causalidad."}
+      260  
+      261 -# TODO 4 · Un recurso, por ejemplo la plantilla bcrp://serie/{
+          -codigo} con la ficha de la serie.                             
+      261 +@mcp.resource("bcrp://serie/{codigo}", mime_type="application/
+          +json")                                                        
+      262 +def ficha_serie(codigo: str) -> dict:                         
+      263 +    """Ficha descriptiva de una serie del BCRP: nombre, catego
+          +ría, frecuencia, inicio, última actualización                 
+      264 +    y el enlace para pedir sus datos. No trae valores: para es
+          +o están serie y resumen."""                                   
+      265 +    f = _ficha(codigo.strip().upper())                        
+      266 +    return {**f, "api": f"{API}/{f['codigo']}/json/{{desde}}/{
+          +{hasta}}", "catalogo": URL_CATALOGO,                          
+      267 +            "institucion": "Banco Central de Reserva del Perú 
+          +(BCRP)"}                                                      
+      268  
+      263 -# TODO 5 · Un prompt, por ejemplo informe(tema) que pida citar
+          - el código y el periodo de cada cifra.                        
+      269  
+      270 +@mcp.prompt                                                   
+      271 +def informe(tema: str) -> str:                                
+      272 +    """Informe breve con datos del BCRP sobre un tema, citando
+          + código, periodo y fuente de cada cifra."""                   
+      273 +    return f"""Escribe un informe breve sobre: {tema}         
+      274  
+      275 +Reglas obligatorias:                                          
+      276 +1. Usa solo datos obtenidos con las herramientas del servidor 
+          +bcrp: busca los códigos con buscar_series y                   
+      277 +   obtén las cifras con serie, resumen o correlacion. No uses 
+          +cifras de memoria ni hagas cuentas a mano.                    
+      278 +2. Cada cifra debe citar el código de la serie, el periodo exa
+          +cto y la fuente (la URL que devolvió la                       
+      279 +   herramienta). Formato sugerido: "1.97 % (PN01273PM, 2024-12
+          +, fuente: <url>)".                                            
+      280 +3. Las correlaciones y coincidencias en el tiempo son asociaci
+          +ones descriptivas: no las presentes como                      
+      281 +   causas ("X provocó Y"). Usa expresiones como "se movieron e
+          +n la misma dirección".                                        
+      282 +4. Si un dato no existe o la herramienta da error, dilo; no lo
+          + inventes.                                                    
+      283 +5. Termina con una lista de las series usadas: código, nombre,
+          + frecuencia y periodo consultado."""                          
+      284 +                                                              
+      285 +                                                              
+      286  if __name__ == "__main__":
+      287      mcp.run()
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 8 original tests pass. The deprecation warning came from my demo script,
+  not the server. I'll also add correlacion and the resource to the server's
+  general instructions, then commit step 5.
+
+● Update(mcp\server.py)
+  ⎿  Added 3 lines, removed 2 lines
+      25  
+      26  mcp = FastMCP("bcrp", instructions=(
+      27      "Series oficiales del Banco Central de Reserva del Perú (BC
+          RP). Primero busca el código con buscar_series; "
+      28 -    "luego usa resumen para variaciones, promedios y extremos, 
+         -y serie para los datos. No calcules a mano: "                  
+      29 -    "cita siempre el código de la serie y el periodo."))       
+      28 +    "luego usa resumen para variaciones, promedios y extremos, 
+         +serie para los datos y correlacion para ver si "               
+      29 +    "dos series se movieron juntas (asociación, no causa). La f
+         +icha de cada serie está en bcrp://serie/{codigo}. "            
+      30 +    "No calcules a mano: cita siempre el código de la serie, el
+         + periodo y la fuente."))                                       
+      31  
+      32  
+      33  def _sin_tildes(s):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 6: las 2 pruebas propias.
+
+● Write(mcp\test_propia.py)
+  ⎿  Wrote 31 lines to mcp\test_propia.py
+      1 """Pruebas de la herramienta propia `correlacion`, con el mismo c
+        liente en memoria que test_server.py.
+      2 
+      3     uv run pytest -v mcp/test_propia.py
+      4 """
+      5 import asyncio
+      6 
+      7 import pytest
+      8 from fastmcp import Client
+      9 from fastmcp.exceptions import ToolError
+     … +22 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Result: 10 passed. test_server.py matches the original byte for byte (same
+  SHA-256). Before committing, I'll check that the saved output has no personal
+  paths.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The file has two lines with your local path (C:\Users\LENOVO\...). I'll
+  replace that path with <proyecto> and leave the test results untouched.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The first replacement missed (a backslash-escaping problem in the shell). I'll
+  redo it with Python:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Paso 7: conectar el servidor a Claude Code.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● .mcp.json has no keys or personal paths: it's only uv run mcp/server.py. I'll
+  check that Claude Code can connect to it:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● bcrp shows "Pending approval". That's normal: Claude Code asks you to approve
+  project servers the first time you open a new session in this folder.
+  Committing step 7:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Paso 8: el README.
+
+● Write(README.md)
+  ⎿  Wrote 104 lines to README.md
+       1 # Tarea 4 – Agente de investigación socioeconómica del Perú
+       2 
+       3 Referencia oficial: <https://github.com/d2cml-ai/Data-Science-Py
+         thon/issues/201>
+       4 
+       5 ## Pregunta de investigación
+       6 
+       7 > ¿Cómo fue la pobreza monetaria en el Perú en 2024 por área y d
+         epartamento, y en qué contexto
+       8 > macroeconómico (inflación, tipo de cambio, actividad económica
+     … +97 lines (~4 KB) (ctrl+o to expand)
+
+● Por último, verifico uv sync, busco datos sensibles en los archivos
+  versionados y hago el commit del README.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● La Parte 1 está terminada: el servidor MCP del BCRP funciona y pasan las 10 
+  pruebas (10 passed). Hice un commit por paso, sin push, y el árbol de trabajo
+  quedó limpio.
+
+  Qué hace cada archivo
+
+  ┌─────────────────────────┬────────────────────────────────────────────────┐
+  │         Archivo         │                    Qué hace                    │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │                         │ El servidor, con 4 herramientas                │
+  │ mcp/server.py           │ (buscar_series, serie, resumen, correlacion),  │
+  │                         │ el recurso bcrp://serie/{codigo} y el prompt   │
+  │                         │ informe(tema)                                  │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │                         │ Las 8 pruebas originales, sin cambios: es      │
+  │ mcp/test_server.py      │ idéntico a la copia guardada en $env:TEMP      │
+  │                         │ (mismo SHA-256)                                │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │                         │ 2 pruebas de correlacion: una serie consigo    │
+  │ mcp/test_propia.py      │ misma da ≈ 1 con 12 periodos, y frecuencias    │
+  │                         │ distintas dan ToolError                        │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ salidas/pruebas_mcp.txt │ Salida de uv run pytest -v; reemplacé tu ruta  │
+  │                         │ local por <proyecto>                           │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ .mcp.json               │ Conecta bcrp a Claude Code con uv run          │
+  │                         │ mcp/server.py, sin claves ni rutas personales  │
+  ├─────────────────────────┼────────────────────────────────────────────────┤
+  │ README.md               │ Pregunta, las 4 partes, herramientas, parseo   │
+  │                         │ de fechas, instalación, pruebas y conexión     │
+  └─────────────────────────┴────────────────────────────────────────────────┘
+
+  Algunos resultados que salieron de las pruebas:
+  - Inflación a 12 meses (PN01273PM) en 2024: empezó en 3,02 % (2024-01) y
+    terminó en 1,97 % (2024-12).
+  - Correlación entre inflación y tipo de cambio mensual (PN01207PM) en 2024: r
+    ≈ 0,17 con 12 periodos.
+  - Los 3 feriados de julio que la API marca como n.d. se omiten y se cuentan.
+
+  Un detalle: en correlacion, la lista descartados solo incluye periodos con
+  dato en una serie y no en la otra. Los n.d. que faltan en ambas no aparecen
+  ahí.
+
+  Cómo explicar el parseo de fechas
+
+  La API del BCRP usa un formato para lo que se le pide (2025-3, 2025-03-15) y
+  otro para lo que devuelve (Mar.2025, 01.Oct.26, T1.25). Por eso hay dos
+  funciones: _periodo_api traduce el periodo del usuario según la frecuencia de
+  la serie, y _normalizar_periodo convierte la respuesta a un formato estándar y
+  ordenable (2025-03, 2026-10-01, 2025-T1). Los meses salen de un diccionario
+  propio en español, que acepta Set y Sep, así el resultado no depende del
+  idioma de la computadora. Los años de dos dígitos siguen la regla de Python:
+  26 es 2026 y 97 es 1997.
+
+  Checklist de la rúbrica
+
+  - [x] Servidor con búsqueda, consulta y resumen (2.0): buscar_series, serie y
+    resumen, con fuente, n.d. omitidos, reintentos y error claro.
+  - [x] Herramienta propia útil, validada y documentada (1.0): correlacion exige
+    misma frecuencia y al menos 3 periodos, y avisa que no es causal.
+  - [x] Recurso, prompt e integración (1.0): el recurso, el prompt y .mcp.json.
+  - [x] 10 pruebas aprobadas (1.0)
+
+  f9674ec docs: README con la pregunta, las 4 partes, el servidor MCP y cómo 
+  probarlo
+  c09506b chore(mcp): conectar el servidor bcrp a Claude Code con alcance de 
+  proyecto
+  8f5fa60 test(mcp): pruebas propias de correlacion y salida de pytest (10 
+  passed)
+  12dffc3 feat(mcp): recurso bcrp://serie/{codigo} y prompt informe(tema)
+  ea26de7 feat(mcp): herramienta propia correlacion entre dos series del BCRP
+  97e771b feat(mcp): herramienta resumen con estadísticas calculadas en pandas
+  4b9a383 feat(mcp): herramienta serie con parseo de fechas en español y 
+  reintentos
+  1293bac chore: preparar proyecto con uv y servidor base de la Sesión 04
+
+  Qué probar en una sesión nueva
+
+  Abre claude en esta carpeta. Primero te pedirá aprobar el servidor bcrp; por
+  ahora aparece como "Pending approval", lo cual es normal.
+  1. Escribe /mcp: bcrp debe aparecer conectado con 4 herramientas.
+  2. Pregunta: "¿Cuál fue la inflación a 12 meses en Lima en diciembre de 2024 y
+     cómo varió durante el año?" La respuesta debe citar PN01273PM, el periodo
+     y la URL de la fuente.
+  3. Escribe @ y elige el recurso bcrp://serie/PN01273PM.
+  4. Escribe / y elige el prompt informe, por ejemplo con el tema "inflación y
+     tipo de cambio en 2024".
+
+  Recordatorios
+
+  - Publica con GitHub Desktop como repositorio público.
+  - Verifica en el navegador que no aparezcan .venv ni datos. Revisé los
+    archivos versionados y no están.
+  - Haz las pruebas de arriba en una sesión nueva.
+  - Exporta con /export a evidencias_ia/mcp/ esta conversación y la de prueba,
+    ocultando claves, tokens y datos personales, como tu correo o tu ruta
+    C:\Users\....
+
+✻ Brewed for 5m 26s · done 9:45 a.m.
+
+※ recap: Part 1 of Tarea 4 is finished: the BCRP MCP server is built, the 10 tests pass, and everything is committed locally. Next, open a new Claude session in this folder, approve the `bcrp` server, try `/mcp`, `@` and `/informe`, then publish with GitHub Desktop. (disable recaps in /config)

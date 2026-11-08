@@ -1,0 +1,209 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ ¿Cuál fue la inflación a 12 meses en Lima en diciembre de 2024 y cómo varió   
+  durante el año?                                                               
+
+● I'll use the BCRP MCP server to look up the series.
+
+  Called bcrp 3 times (ctrl+o to expand)
+
+● La inflación a 12 meses en Lima Metropolitana cerró diciembre de 2024 en 1,97 
+  %. En enero estaba en 3,02 %, así que bajó 1,06 puntos porcentuales durante el
+  año.
+
+  ┌─────┬─────────────────┐
+  │ Mes │ Var. % 12 meses │
+  ├─────┼─────────────────┤
+  │ Ene │ 3,02            │
+  ├─────┼─────────────────┤
+  │ Feb │ 3,29 (máximo)   │
+  ├─────┼─────────────────┤
+  │ Mar │ 3,05            │
+  ├─────┼─────────────────┤
+  │ Abr │ 2,42            │
+  ├─────┼─────────────────┤
+  │ May │ 2,00            │
+  ├─────┼─────────────────┤
+  │ Jun │ 2,29            │
+  ├─────┼─────────────────┤
+  │ Jul │ 2,13            │
+  ├─────┼─────────────────┤
+  │ Ago │ 2,03            │
+  ├─────┼─────────────────┤
+  │ Sep │ 1,78 (mínimo)   │
+  ├─────┼─────────────────┤
+  │ Oct │ 2,01            │
+  ├─────┼─────────────────┤
+  │ Nov │ 2,27            │
+  ├─────┼─────────────────┤
+  │ Dic │ 1,97            │
+  └─────┴─────────────────┘
+
+  Cómo se movió:
+  - Primer trimestre: estuvo cerca de 3 % y tocó su punto más alto en febrero
+    (3,29 %).
+  - De abril a septiembre: bajó rápido. Entre marzo y mayo cayó unos 1,0 punto y
+    en septiembre llegó a su punto más bajo (1,78 %).
+  - Último trimestre: subió un poco en octubre y noviembre (2,27 %) y luego
+    volvió a bajar en diciembre.
+  - Promedio del año: 2,35 %.
+  - Meta del BCRP: desde abril la inflación quedó dentro del rango meta de 1 % a
+    3 %. En diciembre estaba casi en el centro de ese rango (2 %).
+
+  Fuente: BCRP, serie PN01273PM (Índice de precios Lima Metropolitana, var. % 12
+  meses – IPC), de enero a diciembre de 2024. URL consultada: https://estadisti
+  cas.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/2024-12
+
+✻ Baked for 17s · done 9:57 a.m.
+
+❯ ¿Desde cuándo hay datos de esta serie y con qué frecuencia se publica?        
+
+● La serie PN01273PM tiene datos desde enero de 1950 y es mensual: hay un dato
+  por mes.
+
+  - Última actualización en el BCRP: 8 de octubre de 2026, según la búsqueda que
+    hice antes.
+  - Cobertura: solo Lima Metropolitana, no todo el país.
+  - Qué mide: la variación porcentual del IPC frente al mismo mes del año
+    anterior.
+
+  El BCRP actualiza la serie a inicios de cada mes, después de que el INEI
+  publica el IPC del mes anterior (normalmente el día 1). Por eso la
+  actualización del 8 de octubre de 2026 debería incluir el dato de septiembre
+  de 2026, pero no lo comprobé en la serie.
+
+  Fuente: BCRP, búsqueda de la serie PN01273PM con la herramienta buscar_series
+  del servidor MCP. La ficha completa también está en bcrp://serie/PN01273PM.
+
+✻ Cogitated for 4s · done 9:58 a.m.
+
+❯ @bcrp:bcrp://serie/PN01273PM ¿Desde cuándo hay datos de esta serie y con qué  
+  frecuencia se publica?                                                        
+
+● readMcpResource(Read resource "bcrp://serie/PN01273PM" from server "bcrp")
+  ⎿  {
+       "contents": [
+         {
+     … +13 lines (ctrl+o to expand)
+
+● La ficha oficial bcrp://serie/PN01273PM confirma lo que te dije: hay datos
+  desde enero de 1950 y la frecuencia es mensual.
+
+  ┌────────────────────┬────────────────────────────────────────────────────┐
+  │       Campo        │                       Valor                        │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Código             │ PN01273PM                                          │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Nombre             │ Índice de precios Lima Metropolitana (var% 12      │
+  │                    │ meses) - IPC                                       │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Categoría          │ Inflación                                          │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Frecuencia         │ Mensual                                            │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Inicio             │ Ene-1950                                           │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Última             │ 2026-10-08                                         │
+  │ actualización      │                                                    │
+  ├────────────────────┼────────────────────────────────────────────────────┤
+  │ Institución        │ Banco Central de Reserva del Perú (BCRP)           │
+  └────────────────────┴────────────────────────────────────────────────────┘
+
+  La ficha dice que la serie es mensual, pero no dice en qué fecha se publica
+  cada dato. Lo que mencioné antes, que el INEI publica el IPC el primer día de
+  cada mes y el BCRP lo carga después, no viene de esta ficha. Es conocimiento
+  general.
+
+  Fuente: ficha bcrp://serie/PN01273PM del servidor MCP bcrp.
+  - Datos: https://estadisticas.bcrp.gob.pe/estadisticas/series/api/PN01273PM/js
+    on/{desde}/{hasta}
+  - Catálogo de metadatos:
+    https://estadisticas.bcrp.gob.pe/estadisticas/series/metadata
+
+✻ Cooked for 8s · done 9:59 a.m.
+
+❯ /mcp__bcrp__informe inflación y tipo de cambio en 2024                        
+
+  Called bcrp 4 times (ctrl+o to expand)
+
+● Informe breve: inflación y tipo de cambio en Lima, 2024
+
+  En resumen: En 2024 la inflación a 12 meses de Lima Metropolitana bajó de 3,02
+  % en enero a 1,97 % en diciembre. El tipo de cambio terminó el año casi igual
+  que como empezó, con 3,74 S/ por US$ en enero y 3,74 en diciembre. La
+  correlación entre las dos series fue débil (0,17).
+
+  Fuentes (cada cifra cita su código, su periodo y una de estas fuentes):
+  - [F1] https://estadisticas.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json
+    /2024-1/2024-12
+  - [F2] https://estadisticas.bcrp.gob.pe/estadisticas/series/api/PN01206PM/json
+    /2024-1/2024-12
+
+  1. Inflación a 12 meses (IPC Lima Metropolitana)
+
+  - Inicio y cierre del año: empezó en 3,02 % (PN01273PM, 2024-01, [F1]) y cerró
+    en 1,97 % (PN01273PM, 2024-12, [F1]). Es una baja de 1,06 puntos
+    porcentuales entre enero y diciembre (PN01273PM, 2024-01 a 2024-12, [F1]).
+  - Máximo: 3,29 % (PN01273PM, 2024-02, [F1]).
+  - Mínimo: 1,78 % (PN01273PM, 2024-09, [F1]).
+  - Promedio del año: 2,35 % (PN01273PM, 2024-01 a 2024-12, [F1]).
+  - Recorrido:
+    - Primer trimestre: estuvo alrededor de 3 %, con 3,05 % en marzo (PN01273PM,
+      2024-03, [F1]).
+    - De abril a mayo: bajó a 2,42 % (PN01273PM, 2024-04, [F1]) y luego a 2,00 %
+      (PN01273PM, 2024-05, [F1]).
+    - Hasta septiembre: se mantuvo entre 2,0 % y 2,3 % y llegó a su mínimo en
+      septiembre.
+    - Fin de año: subió a 2,27 % en noviembre (PN01273PM, 2024-11, [F1]) y
+      volvió a bajar en diciembre.
+
+  2. Tipo de cambio interbancario (venta, promedio mensual)
+
+  - Inicio y cierre del año: empezó en 3,742 S/ por US$ (PN01206PM, 2024-01,
+    [F2]) y cerró en 3,737 S/ por US$ (PN01206PM, 2024-12, [F2]). Es una
+    variación de −0,14 % (PN01206PM, 2024-01 a 2024-12, [F2]).
+  - Máximo: 3,829 (PN01206PM, 2024-02, [F2]).
+  - Mínimo: 3,710 (PN01206PM, 2024-03, [F2]).
+  - Promedio del año: 3,756 (PN01206PM, 2024-01 a 2024-12, [F2]).
+  - Recorrido: se movió en un rango estrecho, con picos menores en junio, 3,788
+    (PN01206PM, 2024-06, [F2]), y en noviembre, 3,780 (PN01206PM, 2024-11,
+    [F2]).
+
+  3. ¿Se movieron juntas?
+
+  - Coeficiente de Pearson: 0,17, con n = 12 meses y sin periodos descartados
+    (PN01273PM vs. PN01206PM, 2024-01 a 2024-12, [F1] y [F2]).
+  - Lectura: es una asociación positiva muy débil. En 2024 las dos series casi
+    no se movieron en la misma dirección.
+  - Coincidencia en febrero: las dos llegaron a su máximo anual en febrero
+    (PN01273PM y PN01206PM, 2024-02, [F1] y [F2]). Es una coincidencia en el
+    tiempo y no indica que una haya influido en la otra.
+  - Límites: 12 datos son pocos y la correlación no prueba causalidad.
+
+  Series usadas
+
+  ┌───────────┬─────────────────────────────────┬────────────┬──────────────┐
+  │  Código   │             Nombre              │ Frecuencia │   Periodo    │
+  │           │                                 │            │  consultado  │
+  ├───────────┼─────────────────────────────────┼────────────┼──────────────┤
+  │           │ Índice de precios Lima          │            │ 2024-01 a    │
+  │ PN01273PM │ Metropolitana (var% 12 meses) - │ Mensual    │ 2024-12      │
+  │           │  IPC                            │            │              │
+  ├───────────┼─────────────────────────────────┼────────────┼──────────────┤
+  │           │ Tipo de cambio - promedio del   │            │ 2024-01 a    │
+  │ PN01206PM │ periodo (S/ por US$) -          │ Mensual    │ 2024-12      │
+  │           │ Interbancario - Venta           │            │              │
+  └───────────┴─────────────────────────────────┴────────────┴──────────────┘
+
+  Sobre las respuestas anteriores: En la primera respuesta mencioné dos datos
+  que no salieron de las herramientas, así que no aparecen en este informe:
+  - el rango meta del BCRP de 1 % a 3 %, que venía de memoria;
+  - una caída de "unos 1,0 punto entre marzo y mayo", que calculé a mano.
+
+✻ Brewed for 46s · done 10:00 a.m.
+
+❯ /export                                                                       
+  ⎿  Export cancelled
