@@ -1,0 +1,23 @@
+# Entorno y cachés
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Datos descargados (se regeneran)
+datos/
+mcp/datos/
+*.zip
+*.dta
+
+# Secretos
+.env
+.env.*
+
+# Temporales
+*.tmp
+*.log
+~$*
+.DS_Store
+Thumbs.db
