@@ -1,0 +1,907 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ Tarea 4 – Parte 3, preparación                                                
+                                                                                
+  Agrega al servidor MCP (mcp/server.py) una quinta herramienta                 
+  graficar_serie(codigo, desde, hasta, titulo) que descargue la serie con la    
+  misma lógica de serie, guarde los datos en salidas/bcrp_<codigo>.csv y un     
+  gráfico de línea en figuras/bcrp_<codigo>.png con el mismo estilo de las      
+  figuras de ENAHO (azul oscuro #1F4E79, título analítico, unidad, periodo y    
+  nota                                                                          
+  "Fuente: BCRP, serie <codigo>, <url>"), y devuelva las rutas, el código, el   
+  periodo y la fuente. Nada de cifras escritas a mano.                          
+  - No modifiques test_server.py ni test_propia.py: uv run pytest -q debe       
+    seguir dando 10 passed. Actualiza salidas/pruebas_mcp.txt.                  
+  - Documenta la herramienta en el README.                                      
+  - Commit: feat(mcp): herramienta graficar_serie para el informe.              
+    Al terminar, recuérdame exportar a                                          
+  evidencias_ia/integracion/01_preparacion_parte3.txt.                          
+
+● I'll look at the MCP server, tests, and the existing ENAHO figure style first.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● The catalog's unit column is mostly empty, so I'll take units from the
+  parentheses in the series names instead. Writing the tool next.
+
+● Update(mcp\server.py)
+  ⎿  Added 103 lines
+      259              "nota": "Correlación de Pearson: asociación descri
+           ptiva entre las dos series en estos periodos. "
+      260                      "No implica causalidad."}
+      261  
+      262 +# ------------------------------------------------------------
+          +---------------------------------------------------           
+      263 +# Gráfico para el informe. Mismo estilo que las figuras de la 
+          +ENAHO (Parte 2): azul oscuro, título con el                   
+      264 +# hallazgo, subtítulo con unidad y periodo, nota con la fuente
+          +. Todas las cifras salen de los datos descargados.            
+      265 +# ------------------------------------------------------------
+          +---------------------------------------------------           
+      266 +RAIZ = AQUI.parent                                            
+      267 +AZUL = "#1F4E79"                                              
+      268 +GRIS_TEXTO = "#595959"                                        
+      269 +GRIS_GRILLA = "#ebebeb"                                       
+      270 +ESCRIBE_ARCHIVOS = {"readOnlyHint": False, "destructiveHint": 
+          +False, "idempotentHint": True, "openWorldHint": True}         
+      271 +                                                              
+      272 +                                                              
+      273 +def _unidad(codigo):                                          
+      274 +    """Unidad de medida: la columna del catálogo si existe; si
+          + no, el último paréntesis del nombre."""                      
+      275 +    f = catalogo().query("codigo == @codigo").iloc[0]         
+      276 +    if str(f.get("Unidad de medida", "")).strip():            
+      277 +        return str(f["Unidad de medida"]).strip()             
+      278 +    parentesis = re.findall(r"\(([^()]+)\)", f"{f.grupo} {f.no
+          +mbre}")                                                       
+      279 +    return parentesis[-1].strip() if parentesis else "unidad n
+          +o indicada en el catálogo del BCRP"                           
+      280 +                                                              
+      281 +                                                              
+      282 +def _fecha(periodo):                                          
+      283 +    """Periodo normalizado -> fecha para el eje X ("2025-T2" -
+          +> 2025-04-01, "2025" -> 2025-01-01)."""                       
+      284 +    if m := re.fullmatch(r"(\d{4})-T([1-4])", periodo):       
+      285 +        return pd.Timestamp(int(m[1]), (int(m[2]) - 1) * 3 + 1
+          +, 1)                                                          
+      286 +    return pd.Timestamp(periodo if len(periodo) > 4 else f"{pe
+          +riodo}-01-01")                                                
+      287 +                                                              
+      288 +                                                              
+      289 +def _num(x):                                                  
+      290 +    return f"{x:,.2f}"                                        
+      291 +                                                              
+      292 +                                                              
+      293 +@mcp.tool(annotations=ESCRIBE_ARCHIVOS)                       
+      294 +def graficar_serie(codigo: str, desde: str, hasta: str, titulo
+          +: str = "") -> dict:                                          
+      295 +    """Gráfico de línea de una serie del BCRP para el informe,
+          + con los datos en CSV.                                        
+      296 +                                                              
+      297 +    Descarga la serie con la misma lógica que serie (mismos pe
+          +riodos y misma URL de fuente), guarda los datos               
+      298 +    en salidas/bcrp_<codigo>.csv y la figura en figuras/bcrp_<
+          +codigo>.png, con el estilo de las figuras de la               
+      299 +    ENAHO: línea azul oscuro, título analítico, subtítulo con 
+          +unidad y periodo, y la nota                                   
+      300 +    "Fuente: BCRP, serie <codigo>, <url>".                    
+      301 +    titulo: la frase con el hallazgo (p. ej. sacada de resumen
+          +). Si se deja vacío, se arma con el primer y el               
+      302 +    último valor de los datos. No escriban cifras de memoria e
+          +n el título: tómenlas de resumen.                             
+      303 +    Devuelve las rutas del PNG y del CSV, el código, el period
+          +o efectivo (primer y último dato), n y la fuente.             
+      304 +    Ejemplo: graficar_serie("PN01273PM", "2024-01", "2025-12",
+          + "La inflación ...") -> figuras/bcrp_PN01273PM.png            
+      305 +    """                                                       
+      306 +    import textwrap                                           
+      307 +                                                              
+      308 +    import matplotlib                                         
+      309 +    matplotlib.use("Agg")                                     
+      310 +    import matplotlib.pyplot as plt                           
+      311 +                                                              
+      312 +    r = _obtener(codigo, desde, hasta)                        
+      313 +    df = pd.DataFrame(r["datos"], columns=["periodo", "valor"]
+          +).sort_values("periodo", ignore_index=True)                   
+      314 +    if df.empty:                                              
+      315 +        raise ToolError(f"La serie {r['codigo']} no tiene dato
+          +s entre {desde} y {hasta}. Fuente: {r['fuente']}")            
+      316 +    cod, unidad = r["codigo"], _unidad(r["codigo"])           
+      317 +    p0, p1 = df.periodo.iloc[0], df.periodo.iloc[-1]          
+      318 +    v0, v1 = df.valor.iloc[0], df.valor.iloc[-1]              
+      319 +                                                              
+      320 +    csv = RAIZ / "salidas" / f"bcrp_{cod}.csv"                
+      321 +    png = RAIZ / "figuras" / f"bcrp_{cod}.png"                
+      322 +    csv.parent.mkdir(parents=True, exist_ok=True)             
+      323 +    png.parent.mkdir(parents=True, exist_ok=True)             
+      324 +    df.assign(codigo=cod, nombre=r["nombre"], unidad=unidad, f
+          +uente=r["fuente"]).to_csv(                                    
+      325 +        csv, index=False, encoding="utf-8")                   
+      326 +                                                              
+      327 +    titulo = titulo.strip() or (f"{r['nombre']}: pasó de {_num
+          +(v0)} en {p0} a {_num(v1)} en {p1}")                          
+      328 +    subtitulo = f"{r['nombre']}\n{unidad} · {r['frecuencia'].l
+          +ower()}, {p0} a {p1} (n = {len(df)})"                         
+      329 +    nota = f"Fuente: BCRP, serie {cod}, {r['fuente']}. Elabora
+          +ción propia."                                                 
+      330 +    if r["omitidos"]:                                         
+      331 +        nota += f" Se omitieron {r['omitidos']} periodos sin d
+          +ato (n.d.)."                                                  
+      332 +                                                              
+      333 +    x = df.periodo.map(_fecha)                                
+      334 +    fig, ax = plt.subplots(figsize=(9, 5.6), facecolor="white"
+          +)                                                             
+      335 +    ax.plot(x, df.valor, color=AZUL, lw=2.2, zorder=3, marker=
+          +"o" if len(df) <= 36 else None, ms=4)                         
+      336 +    ax.annotate(f"{_num(v1)} ({p1})", (x.iloc[-1], v1), xytext
+          +=(6, 0), textcoords="offset points",                          
+      337 +                va="center", ha="left", fontsize=9.5, fontweig
+          +ht="bold", color=AZUL)                                        
+      338 +    ax.set_ylabel(unidad, fontsize=10, color=GRIS_TEXTO)      
+      339 +    ax.yaxis.grid(True, color=GRIS_GRILLA, linewidth=0.9, zord
+          +er=0)                                                         
+      340 +    ax.set_facecolor("white")                                 
+      341 +    for lado in ("top", "right"):                             
+      342 +        ax.spines[lado].set_visible(False)                    
+      343 +    for lado in ("left", "bottom"):                           
+      344 +        ax.spines[lado].set_color("#bfbfbf")                  
+      345 +    ax.tick_params(colors="#333333", length=0)                
+      346 +    ax.set_axisbelow(True)                                    
+      347 +    ax.margins(x=0.08)                                        
+      348 +                                                              
+      349 +    lineas_titulo = textwrap.wrap(titulo, 70)                 
+      350 +    alto = 0.06 * len(lineas_titulo)                          
+      351 +    fig.tight_layout(rect=(0, 0.08, 1, 0.84 - alto + 0.06))   
+      352 +    fig.text(0.01, 0.995, "\n".join(lineas_titulo), ha="left",
+          + va="top", fontsize=14, fontweight="bold")                    
+      353 +    fig.text(0.01, 0.995 - alto - 0.01, subtitulo, ha="left", 
+          +va="top", fontsize=10, color=GRIS_TEXTO,                      
+      354 +             linespacing=1.4)                                 
+      355 +    fig.text(0.01, 0.005, textwrap.fill(nota, 120), ha="left",
+          + va="bottom", fontsize=7.5, color=GRIS_TEXTO)                 
+      356 +    fig.savefig(png, dpi=200, bbox_inches="tight", facecolor="
+          +white")                                                       
+      357 +    plt.close(fig)                                            
+      358 +                                                              
+      359 +    return {"codigo": cod, "nombre": r["nombre"], "unidad": un
+          +idad, "frecuencia": r["frecuencia"],                          
+      360 +            "periodo": {"desde": p0, "hasta": p1}, "n": int(le
+          +n(df)), "omitidos": r["omitidos"],                            
+      361 +            "figura": png.relative_to(RAIZ).as_posix(), "datos
+          +": csv.relative_to(RAIZ).as_posix(),                          
+      362 +            "titulo": titulo, "fuente": r["fuente"]}          
+      363 +                                                              
+      364 +                                                              
+      365  @mcp.resource("bcrp://serie/{codigo}", mime_type="application/
+           json")
+      366  def ficha_serie(codigo: str) -> dict:
+      367      """Ficha descriptiva de una serie del BCRP: nombre, catego
+           ría, frecuencia, inicio, última actualización
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && cat >
+      "C:/Users/LENOVO/AppData/Local/Temp/claude/80338e247642c039/396c40f7-0468-
+      4c5e-8faf-04fe997b1cfa/…)
+  ⎿  5 herramientas
+     {
+      "codigo": "PN01273PM",
+     … +33 lines (ctrl+o to expand)
+  ⎿  Created salidas\bcrp_PD04638PD.csv (+64 -0)
+       1 +periodo,valor,codigo,nombre,unidad,fuente                      
+       2 +2025-01-02,3.75416666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+       3 +2025-01-03,3.76016666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+       4 +2025-01-06,3.7625,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       5 +2025-01-07,3.7695,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       6 +2025-01-08,3.78116666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+       7 +2025-01-09,3.7675,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       8 +2025-01-10,3.77,PD04638PD,Tipo de cambio - TC Interbancario (S/
+         + por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/e
+         +stadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31    
+       9 +2025-01-13,3.78166666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      10 +2025-01-14,3.7755,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      11 +2025-01-15,3.76533333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      12 +2025-01-16,3.76616666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      13 +2025-01-17,3.74716666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      14 +2025-01-20,3.73466666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      15 +2025-01-21,3.732,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      16 +2025-01-22,3.72116666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      17 +2025-01-23,3.7145,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      18 +2025-01-24,3.71416666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      19 +2025-01-27,3.7375,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      20 +2025-01-28,3.74066666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      21 +2025-01-29,3.7235,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      22 +2025-01-30,3.71783333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      23 +2025-01-31,3.72366666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      24 +2025-02-03,3.72083333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      25 +2025-02-04,3.70633333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      26 +2025-02-05,3.71766666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      27 +2025-02-06,3.713,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      28 +2025-02-07,3.71616666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      29 +2025-02-10,3.71416666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      30 +2025-02-11,3.71283333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      31 +2025-02-12,3.713,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      32 +2025-02-13,3.71683333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      33 +2025-02-14,3.7035,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      34 +2025-02-17,3.6945,PD04638PD,Tipo de cambio - TC Interbancario (
+         +S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         +/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      35 +2025-02-18,3.688,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      36 +2025-02-19,3.68683333333333,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      37 +2025-02-20,3.68266666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      38 +2025-02-21,3.67866666666667,PD04638PD,Tipo de cambio - TC Inter
+         +bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         +crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         +25-03-31                                                       
+      39 +2025-02-24,3.686,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      40 +2025-02-25,3.682,PD04638PD,Tipo de cambio - TC Interbancario (S
+         +/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         +estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+     … 24 more lines (ctrl+o to expand)
+  ⎿  Created salidas\bcrp_PN01273PM.csv (+25 -0)
+       1 +periodo,valor,codigo,nombre,unidad,fuente                      
+       2 +2024-01,3.02392174826855,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       3 +2024-02,3.29406696032184,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       4 +2024-03,3.04504592593905,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       5 +2024-04,2.42207617792805,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       6 +2024-05,2.00493835958688,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       7 +2024-06,2.28538225698791,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+       8 +2024-07,2.1276637869709,PN01273PM,Índice de precios Lima Metrop
+         +olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         +s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         +5-12                                                           
+       9 +2024-08,2.03409700303861,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      10 +2024-09,1.77501053596859,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      11 +2024-10,2.00918040984485,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      12 +2024-11,2.27199072148831,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      13 +2024-12,1.96630270142824,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      14 +2025-01,1.85158283440667,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      15 +2025-02,1.4773290589483,PN01273PM,Índice de precios Lima Metrop
+         +olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         +s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         +5-12                                                           
+      16 +2025-03,1.27718026977924,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      17 +2025-04,1.65183401740204,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      18 +2025-05,1.68666289219268,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      19 +2025-06,1.69370904576716,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      20 +2025-07,1.6888009685144,PN01273PM,Índice de precios Lima Metrop
+         +olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         +s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         +5-12                                                           
+      21 +2025-08,1.10633077531991,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      22 +2025-09,1.35839342135424,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      23 +2025-10,1.35177475650182,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      24 +2025-11,1.36861256988846,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+      25 +2025-12,1.50879973918667,PN01273PM,Índice de precios Lima Metro
+         +politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         +as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         +25-12                                                          
+  ⎿  … 2 more files changed
+  ⎿  (timeout 3m)
+
+● Works (the garbled accents are just console encoding; the CSV is fine).
+  Checking both figures.
+
+  Read 2 files (ctrl+o to expand)
+
+● Both figures look right. Small fix for the plural in the "omitted" note, then
+  tests, README, and cleanup of my test outputs.
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && python - <<'EOF'
+      from pathlib import Path…)
+  ⎿  mcp/test_server.py::test_codigo_inexistente_da_un_error_claro PASSED
+        [ 80%]
+     mcp/test_server.py::test_un_recurso PASSED
+     … +17 lines (ctrl+o to expand)
+  ⎿  Deleted salidas\bcrp_PD04638PD.csv (+0 -64)
+       1 -periodo,valor,codigo,nombre,unidad,fuente                      
+       2 -2025-01-02,3.75416666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+       3 -2025-01-03,3.76016666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+       4 -2025-01-06,3.7625,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       5 -2025-01-07,3.7695,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       6 -2025-01-08,3.78116666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+       7 -2025-01-09,3.7675,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+       8 -2025-01-10,3.77,PD04638PD,Tipo de cambio - TC Interbancario (S/
+         - por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/e
+         -stadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31    
+       9 -2025-01-13,3.78166666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      10 -2025-01-14,3.7755,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      11 -2025-01-15,3.76533333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      12 -2025-01-16,3.76616666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      13 -2025-01-17,3.74716666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      14 -2025-01-20,3.73466666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      15 -2025-01-21,3.732,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      16 -2025-01-22,3.72116666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      17 -2025-01-23,3.7145,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      18 -2025-01-24,3.71416666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      19 -2025-01-27,3.7375,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      20 -2025-01-28,3.74066666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      21 -2025-01-29,3.7235,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      22 -2025-01-30,3.71783333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      23 -2025-01-31,3.72366666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      24 -2025-02-03,3.72083333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      25 -2025-02-04,3.70633333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      26 -2025-02-05,3.71766666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      27 -2025-02-06,3.713,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      28 -2025-02-07,3.71616666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      29 -2025-02-10,3.71416666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      30 -2025-02-11,3.71283333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      31 -2025-02-12,3.713,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      32 -2025-02-13,3.71683333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      33 -2025-02-14,3.7035,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      34 -2025-02-17,3.6945,PD04638PD,Tipo de cambio - TC Interbancario (
+         -S/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe
+         -/estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31  
+      35 -2025-02-18,3.688,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      36 -2025-02-19,3.68683333333333,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      37 -2025-02-20,3.68266666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      38 -2025-02-21,3.67866666666667,PD04638PD,Tipo de cambio - TC Inter
+         -bancario (S/ por US$) - Venta,S/ por US$,https://estadisticas.b
+         -crp.gob.pe/estadisticas/series/api/PD04638PD/json/2025-01-01/20
+         -25-03-31                                                       
+      39 -2025-02-24,3.686,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+      40 -2025-02-25,3.682,PD04638PD,Tipo de cambio - TC Interbancario (S
+         -/ por US$) - Venta,S/ por US$,https://estadisticas.bcrp.gob.pe/
+         -estadisticas/series/api/PD04638PD/json/2025-01-01/2025-03-31   
+     … 24 more lines (ctrl+o to expand)
+  ⎿  Deleted salidas\bcrp_PN01273PM.csv (+0 -25)
+       1 -periodo,valor,codigo,nombre,unidad,fuente                      
+       2 -2024-01,3.02392174826855,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       3 -2024-02,3.29406696032184,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       4 -2024-03,3.04504592593905,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       5 -2024-04,2.42207617792805,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       6 -2024-05,2.00493835958688,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       7 -2024-06,2.28538225698791,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+       8 -2024-07,2.1276637869709,PN01273PM,Índice de precios Lima Metrop
+         -olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         -s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         -5-12                                                           
+       9 -2024-08,2.03409700303861,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      10 -2024-09,1.77501053596859,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      11 -2024-10,2.00918040984485,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      12 -2024-11,2.27199072148831,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      13 -2024-12,1.96630270142824,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      14 -2025-01,1.85158283440667,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      15 -2025-02,1.4773290589483,PN01273PM,Índice de precios Lima Metrop
+         -olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         -s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         -5-12                                                           
+      16 -2025-03,1.27718026977924,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      17 -2025-04,1.65183401740204,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      18 -2025-05,1.68666289219268,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      19 -2025-06,1.69370904576716,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      20 -2025-07,1.6888009685144,PN01273PM,Índice de precios Lima Metrop
+         -olitana (var% 12 meses) - IPC,var% 12 meses,https://estadistica
+         -s.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/202
+         -5-12                                                           
+      21 -2025-08,1.10633077531991,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      22 -2025-09,1.35839342135424,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      23 -2025-10,1.35177475650182,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      24 -2025-11,1.36861256988846,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+      25 -2025-12,1.50879973918667,PN01273PM,Índice de precios Lima Metro
+         -politana (var% 12 meses) - IPC,var% 12 meses,https://estadistic
+         -as.bcrp.gob.pe/estadisticas/series/api/PN01273PM/json/2024-1/20
+         -25-12                                                          
+  ⎿  Updated salidas\pruebas_mcp.txt (+3 -4)
+      1  ============================= test session starts ==============
+         ===============
+      2 -platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- <
+        -proyecto>\.venv\Scripts\python.exe                              
+      3 -cachedir: .pytest_cache                                         
+      4 -rootdir: <proyecto>                                             
+      2 +platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- C
+        +:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_\.venv\Scripts\py
+        +thon.exe                                                        
+      3 +rootdir: C:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_       
+      4  configfile: pyproject.toml
+      5  testpaths: mcp
+      6  plugins: anyio-4.16.0, platformdirs-4.14.5
+     ...
+      17  mcp/test_server.py::test_un_recurso PASSED                     
+                    [ 90%]
+      18  mcp/test_server.py::test_un_prompt PASSED                      
+                    [100%]
+      19  
+      21 -============================= 10 passed in 4.00s ==============
+         -================                                               
+      20 +============================= 10 passed in 4.84s ==============
+         +================                                               
+  ⎿  … 3 more files changed
+  ⎿  (timeout 5m)
+
+● The path placeholder didn't apply and I dropped the cachedir line. Rerunning
+  to match the previous format.
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && uv run pytest -v
+      > "C:/Users/LENOVO/AppData/Local/Temp/claude/80338e247642c039/396c40f7-04
+      68-4c5e-8faf-…)
+  ⎿  warning: in the working copy of 'salidas/pruebas_mcp.txt', LF will be
+     replaced by CRLF the next time Git touches it
+     diff --git a/salidas/pruebas_mcp.txt b/salidas/pruebas_mcp.txt
+     … +19 lines (ctrl+o to expand)
+  ⎿  Updated salidas\pruebas_mcp.txt (+4 -3)
+      1  ============================= test session starts ==============
+         ===============
+      2 -platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- C
+        -:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_\.venv\Scripts\py
+        -thon.exe                                                        
+      3 -rootdir: C:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_       
+      2 +platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- <
+        +proyecto>\.venv\Scripts\python.exe                              
+      3 +cachedir: .pytest_cache                                         
+      4 +rootdir: <proyecto>                                             
+      5  configfile: pyproject.toml
+      6  testpaths: mcp
+      7  plugins: anyio-4.16.0, platformdirs-4.14.5
+     ...
+      18  mcp/test_server.py::test_un_recurso PASSED                     
+                    [ 90%]
+      19  mcp/test_server.py::test_un_prompt PASSED                      
+                    [100%]
+      20  
+      20 -============================= 10 passed in 4.84s ==============
+         -================                                               
+      21 +============================= 10 passed in 27.30s =============
+         +================                                               
+  ⎿  (timeout 5m)
+
+● Tests pass and the log matches the previous format. Now the README.
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && uv run python -
+      <<'EOF'
+      from pathlib import Path…)
+  ⎿  35:| `graficar_serie(codigo, desde, hasta, titulo)` | **Para el inform
+     e (Parte 3).** Descarga la serie con la misma lógica que `serie` y gua
+     rda los datos en `salidas/bcrp_<codigo>.csv` y un gráfico de línea en
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+19 -2)
+      32  | `serie(codigo, desde, hasta)` | Datos de la serie con periodo
+          s normalizados, valores `n.d.` omitidos y `fuente` = URL consul
+          tada. |
+      33  | `resumen(codigo, desde, hasta)` | Primero, último, cambio, va
+          riación %, promedio, máximo y mínimo con su periodo (pandas). |
+      34  | `correlacion(codigo_a, codigo_b, desde, hasta)` | **Herramien
+          ta propia.** Correlación de Pearson entre dos series de la mism
+          a frecuencia: alinea periodos, descarta faltantes, exige ≥ 3 pe
+          riodos y devuelve coeficiente, n, periodos, descartados, fuente
+          s y una nota de que es una asociación descriptiva, no causal. |
+      35 +| `graficar_serie(codigo, desde, hasta, titulo)` | **Para el in
+         +forme (Parte 3).** Descarga la serie con la misma lógica que `s
+         +erie` y guarda los datos en `salidas/bcrp_<codigo>.csv` y un gr
+         +áfico de línea en `figuras/bcrp_<codigo>.png`. Devuelve las rut
+         +as, el código, el periodo efectivo (primer y último dato), n y 
+         +la fuente. |                                                   
+      36 +                                                               
+      37 +### `graficar_serie`: gráfico para el informe                  
+      38 +                                                               
+      39 +Usa el mismo estilo que las figuras de la ENAHO de la Parte 2: 
+         +línea azul oscuro (`#1F4E79`), título                          
+      40 +analítico en negrita, subtítulo con el nombre de la serie, la *
+         +*unidad**, la frecuencia y el **periodo**, y la                
+      41 +nota `Fuente: BCRP, serie <codigo>, <url>` con la URL exacta co
+         +nsultada. El último valor se rotula en la línea.               
+      42 +                                                               
+      43 +- `titulo`: la frase con el hallazgo. Sus cifras deben salir de
+         + `resumen`, no de memoria. Si se deja vacío,                   
+      44 +  se arma solo con el primer y el último valor de los datos des
+         +cargados.                                                      
+      45 +- La unidad se toma de la columna «Unidad de medida» del catálo
+         +go; si está vacía, del último paréntesis del                   
+      46 +  nombre de la serie (p. ej. `var% 12 meses`, `S/ por US$`).   
+      47 +- Si hubo periodos sin dato (`n.d.`), la nota dice cuántos se o
+         +mitieron.                                                      
+      48 +- El CSV trae `periodo`, `valor`, `codigo`, `nombre`, `unidad` 
+         +y `fuente`, para verificar cada cifra.                         
+      49 +                                                               
+      50 +Ejemplo: `graficar_serie("PN01273PM", "2024-01", "2025-12", "<h
+         +allazgo tomado de resumen>")` →                                
+      51 +`figuras/bcrp_PN01273PM.png` y `salidas/bcrp_PN01273PM.csv`.   
+      52  
+      53  ### Recurso y prompt
+      54  
+     ...
+      106  
+      107  Al abrir `claude` en esta carpeta, apruebe el servidor `bcrp`.
+            Luego:
+      108  
+       92 -- `/mcp` → `bcrp` debe aparecer conectado con 4 herramientas. 
+      109 +- `/mcp` → `bcrp` debe aparecer conectado con 5 herramientas. 
+      110  - `@bcrp:bcrp://serie/PN01273PM` → adjunta la ficha de la seri
+           e.
+      111  - `/bcrp:informe` (o `/mcp__bcrp__informe`) → prompt de inform
+           e con citas.
+      112  
+     ...
+      217  ## Estructura
+      218  
+      219  ```
+      203 -mcp/server.py         servidor MCP (herramientas, recurso y pr
+          -ompt)                                                         
+      220 +mcp/server.py         servidor MCP (5 herramientas, recurso y 
+          +prompt)                                                       
+      221  mcp/test_server.py    8 pruebas originales (no se modifican)
+      222  mcp/test_propia.py    2 pruebas de la herramienta correlacion
+      223  .claude/skills/       limpiando-enaho, graficando-enaho y mape
+           ando-enaho (Parte 2)
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && sed -i
+      's#^figuras/ mapas/       gráficos y mapa de la ENAHO 2024#figuras/ mapas/
+            gráficos y mapa…)
+  ⎿  warning: in the working copy of 'README.md', LF will be replaced by CR
+     LF the next time Git touches it
+     warning: in the working copy of 'salidas/pruebas_mcp.txt', LF will be
+     … +5 lines (ctrl+o to expand)
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+● The MCP server now has a fifth tool, graficar_serie, and it's committed as
+  3338d73 feat(mcp): herramienta graficar_serie para el informe. uv run pytest 
+  -q still gives 10 passed, and I didn't touch test_server.py or test_propia.py.
+
+  What the tool does (mcp/server.py):
+  - It downloads the series through the same internal function as serie, so the
+    periods and source URL are identical.
+  - It saves the data to salidas/bcrp_<codigo>.csv, with columns for period,
+    value, code, name, unit and source.
+  - It saves a line chart to figuras/bcrp_<codigo>.png in the ENAHO style: dark
+    blue line, bold findings title, a subtitle with the series name, unit,
+    frequency and period, and the note "Fuente: BCRP, serie <codigo>, <url>".
+    The last value is labelled on the line.
+  - It returns both file paths, the code, the period actually covered (first and
+    last data point), the number of points and the source.
+
+  No hand-typed figures:
+  - titulo is optional. If you leave it empty, the title is built from the first
+    and last values in the downloaded data.
+  - The docstring tells the model to take any figures for the title from
+    resumen.
+  - The unit comes from the BCRP catalogue. Its unit column is almost always
+    empty, so in practice the unit is read from the bracketed part of the series
+    name (e.g. "var% 12 meses", "S/ por US$").
+  - If any periods had no data, the note says how many were skipped.
+
+  I tested it with the 12-month inflation series (PN01273PM, monthly) and the
+  daily interbank exchange rate (PD04638PD), and both charts came out correctly.
+  I deleted those test images and CSVs before committing, so you can generate
+  the real ones in Part 3.
+
+  The README now has the new tool in the table, a section explaining it, "5
+  herramientas" in the /mcp check, and updated file-tree lines. I also refreshed
+  salidas/pruebas_mcp.txt with the new test run.
+
+  Reminder: export this conversation to
+  evidencias_ia/integracion/01_preparacion_parte3.txt.
+
+✻ Worked for 2m 29s · done 6:09 p.m.
+
+※ recap: You're preparing Part 3 of Tarea 4, and the new graficar_serie MCP tool is committed with all 10 tests passing. Next, export this conversation to evidencias_ia/integracion/01_preparacion_parte3.txt. (disable recaps in /config)
+
+❯ Responde en español. Revisa que la sección nueva del README sobre             
+  graficar_serie esté en español; si no, tradúcela y haz commit.                
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Revisé la sección y ya está toda en español, así que no hice ningún commit. El
+  último sigue siendo 3338d73.
+
+  Lo que revisé:
+  - La fila de graficar_serie en la tabla de herramientas (línea 35).
+  - La sección «graficar_serie: gráfico para el informe» (líneas 37–51): el
+    estilo, el título, la unidad, los periodos sin dato, las columnas del CSV y
+    el ejemplo.
+  - Los cambios sueltos: «5 herramientas» en la comprobación de /mcp (línea 109)
+    y las dos líneas del árbol de archivos (220 y 226).
+
+  Lo único que no está en español son los nombres que vienen del código, como
+  graficar_serie, titulo o salidas/bcrp_<codigo>.csv, y los textos que salen del
+  BCRP, como var% 12 meses y S/ por US$. Los dejé igual para que coincidan con
+  el código y con el catálogo.
+
+  Recordatorio: exporta la conversación a
+  evidencias_ia/integracion/01_preparacion_parte3.txt.
+
+✻ Worked for 8s · done 6:13 p.m.
