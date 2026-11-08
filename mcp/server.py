@@ -25,8 +25,9 @@ SOLO_LECTURA = {"readOnlyHint": True, "openWorldHint": True}
 
 mcp = FastMCP("bcrp", instructions=(
     "Series oficiales del Banco Central de Reserva del Perú (BCRP). Primero busca el código con buscar_series; "
-    "luego usa resumen para variaciones, promedios y extremos, y serie para los datos. No calcules a mano: "
-    "cita siempre el código de la serie y el periodo."))
+    "luego usa resumen para variaciones, promedios y extremos, serie para los datos y correlacion para ver si "
+    "dos series se movieron juntas (asociación, no causa). La ficha de cada serie está en bcrp://serie/{codigo}. "
+    "No calcules a mano: cita siempre el código de la serie, el periodo y la fuente."))
 
 
 def _sin_tildes(s):
@@ -258,9 +259,29 @@ def correlacion(codigo_a: str, codigo_b: str, desde: str, hasta: str) -> dict:
             "nota": "Correlación de Pearson: asociación descriptiva entre las dos series en estos periodos. "
                     "No implica causalidad."}
 
-# TODO 4 · Un recurso, por ejemplo la plantilla bcrp://serie/{codigo} con la ficha de la serie.
+@mcp.resource("bcrp://serie/{codigo}", mime_type="application/json")
+def ficha_serie(codigo: str) -> dict:
+    """Ficha descriptiva de una serie del BCRP: nombre, categoría, frecuencia, inicio, última actualización
+    y el enlace para pedir sus datos. No trae valores: para eso están serie y resumen."""
+    f = _ficha(codigo.strip().upper())
+    return {**f, "api": f"{API}/{f['codigo']}/json/{{desde}}/{{hasta}}", "catalogo": URL_CATALOGO,
+            "institucion": "Banco Central de Reserva del Perú (BCRP)"}
 
-# TODO 5 · Un prompt, por ejemplo informe(tema) que pida citar el código y el periodo de cada cifra.
+
+@mcp.prompt
+def informe(tema: str) -> str:
+    """Informe breve con datos del BCRP sobre un tema, citando código, periodo y fuente de cada cifra."""
+    return f"""Escribe un informe breve sobre: {tema}
+
+Reglas obligatorias:
+1. Usa solo datos obtenidos con las herramientas del servidor bcrp: busca los códigos con buscar_series y
+   obtén las cifras con serie, resumen o correlacion. No uses cifras de memoria ni hagas cuentas a mano.
+2. Cada cifra debe citar el código de la serie, el periodo exacto y la fuente (la URL que devolvió la
+   herramienta). Formato sugerido: "1.97 % (PN01273PM, 2024-12, fuente: <url>)".
+3. Las correlaciones y coincidencias en el tiempo son asociaciones descriptivas: no las presentes como
+   causas ("X provocó Y"). Usa expresiones como "se movieron en la misma dirección".
+4. Si un dato no existe o la herramienta da error, dilo; no lo inventes.
+5. Termina con una lista de las series usadas: código, nombre, frecuencia y periodo consultado."""
 
 
 if __name__ == "__main__":
