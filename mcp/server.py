@@ -7,6 +7,7 @@
 Las cuentas las hace Python, no el modelo: así cada cifra sale de una llamada que se puede repetir.
 """
 import re
+import time
 import unicodedata
 from functools import cache
 from pathlib import Path
@@ -78,16 +79,117 @@ def buscar_series(texto: str, frecuencia: str | None = None, limite: int = 10) -
     return [_ficha(c) for c in orden.sort_values(["vieja", "largo"]).head(limite).codigo]
 
 
-# TODO 1 · serie(codigo, desde, hasta) -> {"codigo", "nombre", "frecuencia", "datos": [{"periodo", "valor"}], "fuente"}
-#   La API se llama así: f"{API}/{codigo}/json/{desde}/{hasta}" y responde
-#   {"config": {...}, "periods": [{"name": "Ene.2025", "values": ["0.81"]}, ...]}
-#   - Fechas que pide la API: 2025-1 (mensual y trimestral), 2025-01-15 (diaria), 2025 (anual).
-#   - Nombres que devuelve: "Ene.2025" (mensual), "01.Oct.26" (diaria), "T1.25" (trimestral), "2025" (anual).
-#     Setiembre viene como "Set". Devuelvan el periodo como "2025-01", "2026-10-01", "2025-T1" o "2025".
-#   - Salten los valores "n.d." y usen la frecuencia de _ficha(codigo) para saber qué formato pedir.
-#   - Si recibe muchos pedidos seguidos, la API responde una página HTML en vez de JSON: esperen unos segundos y
-#     reintenten (y guarden en caché lo que ya bajaron).
-#   - Un código que no existe debe dar un ToolError que diga el código.
+# ---------------------------------------------------------------------------------------------------------------
+# Fechas. La API del BCRP usa un formato para lo que se le PIDE y otro distinto para lo que DEVUELVE.
+# Por eso hay dos funciones: _periodo_api traduce nuestro periodo al que pide la API y _normalizar_periodo
+# traduce el que devuelve la API a uno estándar y ordenable. Los meses van en un diccionario propio, así
+# el resultado no depende del idioma (locale) de la computadora.
+# ---------------------------------------------------------------------------------------------------------------
+MESES = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6, "jul": 7, "ago": 8,
+         "set": 9, "sep": 9,  # el BCRP usa ambas formas para setiembre
+         "oct": 10, "nov": 11, "dic": 12}
+
+
+def _anio_completo(aa):
+    """Años de dos dígitos ("26" -> 2026, "97" -> 1997), con el mismo corte que Python usa en %y."""
+    aa = int(aa)
+    return 2000 + aa if aa < 69 else 1900 + aa
+
+
+def _periodo_api(periodo, frecuencia, fin=False):
+    """Lo que PIDE la API, según la frecuencia de la serie.
+
+    Acepta "2025", "2025-03", "2025-03-15" o "2025-T1" y devuelve:
+      Diaria -> "2025-03-15"   Mensual -> "2025-3"   Trimestral -> "2025-1"   Anual -> "2025"
+    Si el periodo es menos preciso que la serie (p. ej. "2025" en una serie mensual), fin=False toma el
+    inicio y fin=True el final ("2025" -> "2025-1" para desde y "2025-12" para hasta).
+    """
+    p = str(periodo).strip().upper()
+    m = re.fullmatch(r"(\d{4})(?:-(T[1-4]|\d{1,2})(?:-(\d{1,2}))?)?", p)
+    if not m:
+        raise ToolError(f"Periodo {periodo!r} no válido. Usen 2025, 2025-03, 2025-03-15 o 2025-T1.")
+    anio, medio, dia = int(m[1]), m[2], m[3]
+    if medio and medio.startswith("T"):          # trimestre -> su primer o último mes
+        mes = (int(medio[1]) - 1) * 3 + (3 if fin else 1)
+    elif medio:
+        mes = int(medio)
+        if not 1 <= mes <= 12:
+            raise ToolError(f"Mes fuera de rango en {periodo!r}.")
+    else:
+        mes = 12 if fin else 1
+    f = frecuencia.lower()
+    if f.startswith("diaria"):
+        if dia is None:                          # sin día: primer o último día del mes
+            dia = pd.Period(f"{anio}-{mes:02d}", "M").days_in_month if fin else 1
+        return pd.Timestamp(anio, mes, int(dia)).strftime("%Y-%m-%d")
+    if f.startswith("mensual"):
+        return f"{anio}-{mes}"
+    if f.startswith("trimestral"):
+        return f"{anio}-{(mes - 1) // 3 + 1}"
+    return str(anio)                             # anual
+
+
+def _normalizar_periodo(nombre):
+    """Lo que DEVUELVE la API, llevado a un formato estándar que se ordena bien como texto.
+
+      "Ene.2025" -> "2025-01"    "Set.2025" -> "2025-09"    "01.Oct.26" -> "2026-10-01"
+      "T1.25"    -> "2025-T1"    "2025"     -> "2025"
+    """
+    s = str(nombre).strip()
+    if m := re.fullmatch(r"([A-Za-z]{3})\.(\d{4})", s):                 # mensual
+        return f"{m[2]}-{MESES[m[1].lower()]:02d}"
+    if m := re.fullmatch(r"(\d{1,2})\.([A-Za-z]{3})\.(\d{2,4})", s):    # diaria
+        anio = int(m[3]) if len(m[3]) == 4 else _anio_completo(m[3])
+        return f"{anio}-{MESES[m[2].lower()]:02d}-{int(m[1]):02d}"
+    if m := re.fullmatch(r"T([1-4])\.(\d{2,4})", s, re.IGNORECASE):     # trimestral
+        anio = int(m[2]) if len(m[2]) == 4 else _anio_completo(m[2])
+        return f"{anio}-T{m[1]}"
+    if re.fullmatch(r"\d{4}", s):                                       # anual
+        return s
+    raise ValueError(f"Formato de periodo del BCRP no reconocido: {nombre!r}")
+
+
+@cache
+def _descargar(url, intentos=4):
+    """Pide JSON a la API. Si responde HTML (límite de pedidos), espera y reintenta. Guarda en caché."""
+    for i in range(intentos):
+        try:
+            r = httpx.get(url, timeout=60, follow_redirects=True)
+            if r.status_code == 200 and r.text.lstrip().startswith("{"):
+                return r.json()
+        except (httpx.HTTPError, ValueError):
+            pass
+        time.sleep(2 * (i + 1))
+    raise ToolError(f"La API del BCRP no devolvió datos tras {intentos} intentos: {url}")
+
+
+def _obtener(codigo, desde, hasta):
+    """Ficha + datos de una serie, sin pasar por MCP (lo reutilizan serie, resumen y correlacion)."""
+    ficha = _ficha(codigo.strip().upper())       # ToolError claro si el código no existe
+    d, h = _periodo_api(desde, ficha["frecuencia"]), _periodo_api(hasta, ficha["frecuencia"], fin=True)
+    url = f"{API}/{ficha['codigo']}/json/{d}/{h}"
+    datos, omitidos = [], 0
+    for p in _descargar(url).get("periods", []):
+        valor = (p.get("values") or ["n.d."])[0]
+        try:
+            datos.append({"periodo": _normalizar_periodo(p["name"]), "valor": float(valor)})
+        except (TypeError, ValueError):          # "n.d." y similares: no hay dato ese periodo
+            omitidos += 1
+    return {**ficha, "datos": datos, "omitidos": omitidos, "fuente": url}
+
+
+@mcp.tool(annotations=SOLO_LECTURA)
+def serie(codigo: str, desde: str, hasta: str) -> dict:
+    """Datos de una serie del BCRP entre dos periodos (inclusive).
+
+    codigo: el código de buscar_series, p. ej. "PN01273PM" (IPC, var. % 12 meses).
+    desde / hasta: "2025", "2025-03", "2025-03-15" o "2025-T1"; se adaptan a la frecuencia de la serie.
+    Devuelve el periodo normalizado ("2025-01", "2026-10-01", "2025-T1" o "2025") y el valor de cada dato,
+    cuántos periodos sin dato ("n.d.") se omitieron y en "fuente" la URL exacta consultada: cítenla.
+    """
+    r = _obtener(codigo, desde, hasta)
+    return {k: r[k] for k in ("codigo", "nombre", "frecuencia", "datos", "omitidos", "fuente")}
+
 
 # TODO 2 · resumen(codigo, desde, hasta): primero, ultimo, cambio, variacion_pct, promedio, maximo y minimo
 #   (los tres últimos con su periodo). Úsenla para que el modelo nunca haga cuentas a mano.
