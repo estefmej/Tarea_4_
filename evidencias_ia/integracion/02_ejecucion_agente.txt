@@ -1,0 +1,363 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ Tarea 4 – Parte 3: Agente de investigación socioeconómica                     
+                                                                                
+  Responde siempre en español.                                                  
+                                                                                
+  Pregunta de investigación: "¿Cómo evolucionaron la inflación, el tipo de      
+  cambio                                                                        
+  y la actividad económica del Perú entre 2020 y 2024, y qué diferencias por    
+  área                                                                          
+  y departamento presentaba la pobreza monetaria en 2024?"                      
+                                                                                
+  1. Antes de ejecutar nada, escribe un plan de análisis breve (qué series del  
+     BCRP, qué Skills, qué figuras) y espera mi OK.                             
+  2. BCRP, con el servidor MCP bcrp: usa buscar_series para identificar las     
+     series de inflación (Lima, 12 meses), tipo de cambio y actividad económica 
+     (PBI o producción, variación %); resumen para 2020-2024; y                 
+     graficar_serie para al menos un gráfico. Si una serie no existe o una      
+     herramienta falla, dilo y no inventes datos.                               
+  3. ENAHO, con las Skills: invoca graficando-enaho (área y departamento) y     
+     mapeando-enaho. Si falta la base, que se active limpiando-enaho.           
+  4. Genera informes/informe_final.md con: 1) pregunta, objetivo y              
+     delimitación; 2) fuentes y metodología (series con código y URL, ENAHO,    
+     ponderación); 3) al menos 3 hallazgos sustentados; 4) visualizaciones      
+     enlazadas: un gráfico del BCRP, uno de ENAHO y el mapa; 5) interpretación; 
+     6) limitaciones (distinto nivel de agregación y periodos, inflación solo   
+  de                                                                            
+        Lima, asociaciones no causales); 7) reproducibilidad (scripts,          
+  archivos,                                                                     
+        series y comandos). Cada cifra con su fuente (código de serie o archivo 
+  de                                                                            
+        salidas/). Nada escrito de memoria.                                     
+  5. Crea informes/verificacion.md con una tabla para 4 afirmaciones del        
+     informe (2 del BCRP y 2 de ENAHO) con estas columnas: afirmación, valor    
+     calculado, archivo o serie de origen, cómo verificarlo, valor en la fuente 
+     oficial, ¿coincide?, diferencia. Deja vacías las tres últimas para que yo  
+     las complete.                                                              
+  6. En "cómo verificarlo" apunta a una fuente independiente del procesamiento: 
+     - BCRP: la página oficial de la serie en estadisticas.bcrp.gob.pe (con el  
+       código y el periodo exacto a buscar).                                    
+     - ENAHO: el informe técnico oficial del INEI sobre pobreza monetaria 2024  
+       (nacional, urbano, rural) y el CSV de referencia de la Sesión 16 para    
+       departamentos.                                                           
+  7. Contrasta tú mismo cada cifra principal del informe con su fuente y        
+     menciona en el informe cualquier diferencia encontrada.                    
+  8. Prueba un caso de error: pide a serie un código inexistente y documenta    
+     en Limitaciones cómo respondió el sistema.                                 
+  9. Commits descriptivos (sin push). Al final, resumen de qué herramientas MCP 
+     y qué Skills usaste en esta ejecución.                                     
+
+● Voy a revisar rápido la estructura del repositorio para que el plan sea
+  concreto, sin ejecutar análisis todavía.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Aquí está el plan. Todavía no he ejecutado ninguna herramienta ni Skill; solo
+  revisé qué archivos hay. Ya existe la base salidas/personas_2024.parquet y
+  también datos/pobreza_departamento_2024.csv, que parece ser la referencia de
+  la Sesión 16.
+
+  Plan de análisis
+
+  A. BCRP (servidor MCP bcrp)
+  1. buscar_series con tres búsquedas: inflación Lima 12 meses, tipo de cambio 
+     interbancario y PBI / producción nacional, variación %. Elegiré series
+     mensuales que cubran 2020-2024 y anotaré el código y la URL de cada una.
+  2. resumen para cada una de las tres series entre 2020-01 y 2024-12: valor
+     inicial y final, promedio, máximo y mínimo con su fecha.
+  3. graficar_serie para al menos la inflación. Si funciona bien, también para
+     el tipo de cambio y el PBI. Las figuras van a figuras/bcrp_<codigo>.png y
+     los datos a salidas/bcrp_<codigo>.csv.
+  4. Prueba de error: serie con un código inexistente (por ejemplo PN99999XM).
+     Copiaré la respuesta tal cual.
+  5. Si una serie no existe o una herramienta falla, lo diré en el informe y no
+     pondré ningún dato en su lugar.
+
+  B. ENAHO (Skills)
+  1. graficando-enaho por área y por departamento. Genera
+     figuras/pobreza_area_2024.png, figuras/pobreza_departamento_2024.png y sus
+     CSV en salidas/.
+  2. mapeando-enaho genera mapas/pobreza_departamento_2024.png y
+     salidas/comparacion_mapa.csv.
+  3. limpiando-enaho solo se usará si alguna de las dos Skills anteriores no
+     encuentra la base. Por ahora la base existe.
+
+  C. Informes
+  - informes/informe_final.md con las 7 secciones que pediste. Cada cifra irá
+    con su código de serie o su archivo de salidas/. Habrá al menos 3 hallazgos:
+    la evolución de la inflación, el tipo de cambio y la actividad, la brecha
+    entre urbano y rural, y los departamentos con mayor y menor pobreza. Las
+    figuras enlazadas serán un gráfico del BCRP, el gráfico por área o
+    departamento y el mapa.
+  - informes/verificacion.md con 4 afirmaciones (2 del BCRP y 2 de ENAHO) y las
+    tres últimas columnas vacías.
+  - Contraste propio: compararé cada cifra principal con su origen: los CSV
+    generados, la respuesta de serie para el periodo exacto, la validación
+    oficial de limpiando-enaho y el CSV de referencia de departamentos. Las
+    diferencias que encuentre irán al informe.
+
+  D. Commits (sin push)
+  1. feat(informe): figuras y salidas BCRP para la Parte 3
+  2. docs(informe): informe final de la Parte 3
+  3. docs(informe): tabla de verificación
+
+  El archivo de evidencias que está sin seguimiento (01_preparacion_parte3.txt)
+  irá en un commit aparte de documentación, si te parece bien.
+
+  ¿Me das el OK para ejecutar?
+
+✻ Baked for 21s · done 6:18 p.m.
+
+❯ OK, adelante, con tres precisiones:                                           
+  1. Invoca graficando-enaho y mapeando-enaho como Skills (con la herramienta   
+     Skill, que quede visible en el registro), no ejecutando sus scripts        
+     directamente.                                                              
+  2. En verificacion.md, en "cómo verificarlo" usa fuentes independientes:      
+     para el BCRP, la tabla oficial de la serie en                              
+     https://estadisticas.bcrp.gob.pe/estadisticas/series/api/<CODIGO>/html/<de 
+  sde>/<hasta>                                                                  
+     con el periodo exacto; para ENAHO, el informe técnico del INEI             
+     "Perú: Evolución de la Pobreza Monetaria 2015-2024". No uses Lima como     
+     afirmación a verificar; elige nacional, rural, Cajamarca o Ica.            
+  3. En Limitaciones, agrega que el departamento de Lima (código 15) no         
+     coincide con las categorías que publica el INEI ("Lima Metropolitana" con  
+     Callao y "Lima región"), por lo que no es directamente comparable.         
+
+● Empiezo con las series del BCRP.
+
+  Called bcrp 3 times (ctrl+o to expand)
+
+● Series elegidas: PN01273PM (inflación), PN01206PM (tipo de cambio promedio) y
+  PN01728AM (PBI, var. % interanual). Ahora corro el resumen 2020-2024 de cada
+  una.
+
+  Called bcrp 3 times (ctrl+o to expand)
+
+● Ahora genero los tres gráficos del BCRP. Los títulos usan solo cifras que
+  salieron de resumen.
+
+  Called bcrp 3 times (ctrl+o to expand)
+
+● Ahora pruebo el caso de error con un código que no existe.
+
+  Read 1 file, called bcrp (ctrl+o to expand)
+
+● El gráfico salió bien. Pido también el resumen del PBI en 2023 y 2024 para el
+  hallazgo de actividad.
+
+  Called bcrp 2 times (ctrl+o to expand)
+
+● Ahora ENAHO: invoco la Skill de gráficos.
+
+● Skill(graficando-enaho)
+  ⎿  Successfully loaded skill
+
+  Read 2 files, ran 2 shell commands (ctrl+o to expand)
+
+● Los dos gráficos están bien y no hay nada encimado. Ahora invoco la Skill del
+  mapa.
+
+● Skill(mapeando-enaho)
+  ⎿  Successfully loaded skill
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● El mapa se generó bien. Ahora contrasto las cifras clave de los CSV del BCRP
+  con lo que devolvió resumen.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Las figuras de ENAHO salieron idénticas tras regenerarlas, así que git no
+  detecta cambios. Ahora guardo los cálculos derivados en un script y hago el
+  primer commit.
+
+● Write(scripts\contraste_informe.py)
+  ⎿  Wrote 62 lines to scripts\contraste_informe.py
+      1 """Contraste de las cifras del informe final (Parte 3) con sus ar
+        chivos de origen.
+      2 
+      3 Lee los CSV que generaron graficar_serie (BCRP) y las Skills de E
+        NAHO, calcula las pocas cifras
+      4 derivadas que usa el informe (valores de diciembre, meses con PBI
+         negativo) y compara cada cifra
+      5 principal con su fuente. Escribe el resultado en salidas/contrast
+        e_informe.txt.
+      6 
+     … +56 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && sed -i 's/≤0.1
+      pp/<= 0.1 pp/' scripts/contraste_informe.py && uv run python
+      scripts/contraste_informe.p…)
+  ⎿  Contraste de cifras del informe final (Parte 3)
+
+     [BCRP] salidas/bcrp_<codigo>.csv (descargados con graficar_serie, 2020
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated salidas\contraste_informe.txt (+1 -1)
+      14  Cajamarca (06): gráfico 45.01 %, mapa 45.01 %, referencia Sesió
+          n 16 45.0 %, diferencia +0.01 pp
+      15  Ica (11): gráfico 6.01 %, mapa 6.01 %, referencia Sesión 16 6.0
+           %, diferencia +0.01 pp
+      16  Lima (15): gráfico 27.07 %, mapa 27.07 %, referencia Sesión 16 
+          27.1 %, diferencia -0.03 pp
+      17 -Departamentos a ≤0.1 pp de la referencia: 25 de 25; diferencia 
+         -máxima 0.05 pp                                                 
+      17 +Departamentos a <= 0.1 pp de la referencia: 25 de 25; diferenci
+         +a máxima 0.05 pp                                               
+      18  Gráfico vs mapa, diferencia máxima: 0.01 pp
+  ⎿  Updated scripts\contraste_informe.py (+1 -1)
+      52      r, k = dep.loc[c], comp.loc[c]
+      53      lineas.append(f"{r['categoria']} ({c}): gráfico {r['estimac
+          ion']:.2f} %, mapa {k['pobreza_mapa_sumaria_pct']:.2f} %, "
+      54                    f"referencia Sesión 16 {k['pobreza_referencia
+          _pct']:.1f} %, diferencia {k['diferencia_pp']:+.2f} pp")
+      55 -lineas.append(f"Departamentos a ≤0.1 pp de la referencia: {int(
+         -comp['dentro_tolerancia'].sum())} de {len(comp)}; "            
+      55 +lineas.append(f"Departamentos a <= 0.1 pp de la referencia: {in
+         +t(comp['dentro_tolerancia'].sum())} de {len(comp)}; "          
+      56                f"diferencia máxima {comp['diferencia_pp'].abs().
+          max():.2f} pp")
+      57  coinciden = (dep["estimacion"].round(2) - comp["pobreza_mapa_su
+          maria_pct"].reindex(dep.index)).abs().max()
+      58  lineas.append(f"Gráfico vs mapa, diferencia máxima: {coinciden:
+          .2f} pp")
+
+● El archivo se guarda en UTF-8; las letras raras solo aparecen en la consola.
+  Hago el primer commit.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ahora redacto el informe final con las cifras del contraste.
+
+● Write(informes\informe_final.md)
+  ⎿  Wrote 191 lines to informes\informe_final.md
+       1 # Informe final – Parte 3: Inflación, tipo de cambio, actividad 
+         y pobreza monetaria en el Perú
+       2 
+       3 > Todas las cifras de este informe salen de una herramienta MCP 
+         (`resumen`, `graficar_serie`) o de un
+       4 > archivo de `salidas/`. Al lado de cada cifra va su fuente: el 
+         código de la serie del BCRP o el archivo.
+       5 > Las cifras derivadas (valores de diciembre, meses con PBI nega
+         tivo, brecha) se calculan en
+       6 > `scripts/contraste_informe.py` y quedan en `salidas/contraste_
+     … +186 lines (~12 KB) (ctrl+o to expand)
+
+● Reviso dos detalles antes de cerrar el informe: el nombre del script de
+  limpieza y el ancho máximo de los intervalos de confianza.
+  Ran 1 shell command (ctrl+o to expand)
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && sed -i
+      's#limpiando-enaho/scripts/...      \# solo
+      si#limpiando-enaho/scripts/limpiar.py   \# solo si#;…)
+  ⎿  120:- **Errores de muestreo.** Las cifras departamentales tienen IC 95
+      % amplios; el más ancho es el de Tacna, ±5,6 puntos (18,38-29,60)
+     174:uv run python .claude/skills/limpiando-enaho/scripts/limpiar.py
+     # solo si falta salidas/personas_2024.parquet
+  ⎿  Updated informes\informe_final.md (+2 -2)
+      117    27,07 % en este informe, junta Lima Metropolitana (sin Calla
+           o) con Lima provincias. El INEI publica
+      118    «Lima Metropolitana» (que incluye Callao) y «Lima región» po
+           r separado, así que la cifra del código 15
+      119    no es directamente comparable con ninguna de las dos.
+      120 -- **Errores de muestreo.** Las cifras departamentales tienen I
+          -C 95 % amplios, de hasta ±5 puntos                            
+      120 +- **Errores de muestreo.** Las cifras departamentales tienen I
+          +C 95 % amplios; el más ancho es el de Tacna, ±5,6 puntos (18,3
+          +8-29,60)                                                      
+      121    (`salidas/grafico_por_departamento_2024.csv`). Diferencias p
+           equeñas entre departamentos no son
+      122    significativas. En un estrato hay una sola UPM; el script lo
+            centra en la media general.
+      123  - **Dos ponderaciones válidas.** Con la base de personas y `fa
+           cpob07` la pobreza es 24,74 % (urbano) y
+     ...
+      171  
+      172  **ENAHO** (Skills en `.claude/skills/`; comandos que ejecutaro
+           n, desde la raíz del proyecto):
+      173  ```
+      174 -uv run python .claude/skills/limpiando-enaho/scripts/...      
+          -# solo si falta salidas/personas_2024.parquet                 
+      174 +uv run python .claude/skills/limpiando-enaho/scripts/limpiar.p
+          +y   # solo si falta salidas/personas_2024.parquet             
+      175  uv run python .claude/skills/graficando-enaho/scripts/graficar
+           .py --por area --indicador pobreza
+      176  uv run python .claude/skills/graficando-enaho/scripts/graficar
+           .py --por departamento --indicador pobreza
+      177  uv run python .claude/skills/mapeando-enaho/scripts/mapear.py
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ahora la tabla de verificación.
+
+● Write(informes\verificacion.md)
+  ⎿  Wrote 19 lines to informes\verificacion.md
+      1 # Verificación de afirmaciones del informe final
+      2 
+      3 Hay cuatro afirmaciones de `informes/informe_final.md`: dos del B
+        CRP y dos de la ENAHO. Para cada una, la
+      4 columna «Cómo verificarlo» indica una fuente **independiente** de
+         nuestro procesamiento (no el servidor MCP
+      5 ni nuestros scripts). Las tres últimas columnas quedan vacías par
+        a completarlas a mano.
+      6 
+      7 | # | Afirmación | Valor calculado | Archivo o serie de origen | 
+     … +13 lines (~2 KB) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Listo: ya están informes/informe_final.md (las 7 secciones) e
+  informes/verificacion.md, en 4 commits locales sin push. Todas las cifras
+  salen del servidor bcrp o de archivos de salidas/, y al contrastarlas no
+  encontré diferencias de fondo.
+
+  Lo que dice el informe
+  - Inflación de Lima (PN01273PM): subió de 1,89 % en enero de 2020 a un máximo
+    de 8,81 % en junio de 2022. Cerró 2024 en 1,97 %.
+  - Tipo de cambio (PN01206PM): pasó de S/ 3,329 a un máximo de S/ 4,109 en
+    setiembre de 2021 y terminó 2024 en S/ 3,737.
+  - PBI (PN01728AM): cayó −39,28 % en abril de 2020 y subió 59,89 % en abril de
+    2021 por el rebote. En 2023 hubo 8 meses negativos, y en 2024 el crecimiento
+    promedio fue 3,48 %.
+  - Pobreza 2024: 39,30 % en el área rural frente a 24,81 % en la urbana; el
+    promedio nacional fue 27,58 %. Por departamento va de 45,01 % en Cajamarca a
+    6,01 % en Ica.
+
+  Contraste (paso 7): cada cifra coincide con su fuente. Las únicas diferencias
+  son de redondeo:
+  - Los títulos de los gráficos del BCRP muestran un decimal (por ejemplo, «2,0
+    %» corresponde a 1,97 %).
+  - Los datos de ENAHO quedan a 0,05 puntos o menos de la referencia del curso.
+  - Entre ponderar por personas o por hogares (sumaria) hay hasta 0,14 puntos de
+    diferencia.
+
+  Todo esto está documentado en el informe. Agregué
+  scripts/contraste_informe.py, que vuelve a calcular las cifras y las guarda en
+  salidas/contraste_informe.txt.
+
+  Caso de error (paso 8): pedí serie("PN99999XM") y el servidor respondió No 
+  existe el código de serie 'PN99999XM'. Búsquenlo con buscar_series. No
+  devolvió datos inventados. Está en Limitaciones, junto con la nota sobre Lima
+  (código 15) que pediste.
+
+  Verificación: las 4 afirmaciones son el pico de inflación de junio de 2022, la
+  caída del PBI de abril de 2020, la pobreza nacional y la rural. Las tres
+  últimas columnas quedaron vacías para que las completes.
+
+  Herramientas usadas en esta ejecución
+  - MCP bcrp: buscar_series (3 búsquedas), resumen (5 llamadas), graficar_serie
+    (3 gráficos) y serie (el caso de error). No usé correlacion.
+  - Skills: invoqué graficando-enaho (área y departamento) y mapeando-enaho con
+    la herramienta Skill. limpiando-enaho no se activó porque la base limpia ya
+    existía y su validación tenía 12 de 12 verificaciones aprobadas.
+
+  Los gráficos de ENAHO se regeneraron idénticos, así que no aparecen en ningún
+  commit. El archivo de evidencias 01_preparacion_parte3.txt va en un commit
+  aparte.
+
+✻ Crunched for 4m 2s · done 6:24 p.m.
