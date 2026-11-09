@@ -1,0 +1,1419 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ Tarea 4 – Cierre: README final y entrega                                      
+                                                                                
+  Responde en español. Referencia:                                              
+  https://github.com/d2cml-ai/Data-Science-Python/issues/201                    
+                                                                                
+  1. Revisa el README y asegúrate de que tenga los 12 puntos que pide el        
+     enunciado: objetivo; arquitectura del agente (diagrama Mermaid: Claude     
+     Code → MCP bcrp y Skills → salidas, figuras, mapas, informe); herramientas 
+     MCP (las 5); las tres Skills; fuentes y enlaces para descargar los datos;  
+     instalación con uv; cómo conectar el MCP a Claude Code; comandos para      
+     reproducir el procesamiento y las pruebas; resultados de la evaluación     
+     (A vs. B oficial y el análisis B2); limitaciones y problemas encontrados   
+     (incluye la baja activación automática de Skills en claude -p); un         
+     ejemplo de ejecución completa; y referencia a evidencias_ia/ con lo que    
+     contiene cada subcarpeta. Ninguna cifra escrita a mano: remite a los       
+     archivos de salidas/ y evaluacion/ o genérala con un script.               
+  2. Verifica que el repo se pueda reproducir: uv run pytest -q da 10 passed    
+     y la Skill de limpieza valida 12/12. Guarda las salidas actualizadas.      
+  3. Revisa que no haya credenciales, datos personales ni archivos pesados      
+     versionados (git ls-files y tamaños), y que el .gitignore esté bien.       
+  4. Genera ENTREGA.md con el formato del comentario del Issue, leyendo cada    
+     cifra de los archivos (salidas/pruebas_mcp.txt, salidas/validacion.txt,    
+     evaluacion/resultados.csv). Repositorio:                                   
+  https://github.com/estefmej/Tarea_4_                                          
+     Enlaces: informe final, resultados.csv, evidencia de integración           
+     (evidencias_ia/integracion/02_ejecucion_agente.txt) y evidencias de uso    
+     de IA (carpeta evidencias_ia/), usando la rama main. Deja "Nombre          
+  completo"                                                                     
+     para que yo lo complete. Muéstrame de qué archivo salió cada valor.        
+  5. Commits descriptivos, sin push.                                            
+
+● Voy a revisar el estado del repositorio, el README y los archivos de
+  salidas/evaluación.
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+● Necesito el formato del comentario de entrega del Issue; lo consulto en la
+  web.
+
+● Fetch(https://github.com/d2cml-ai/Data-Science-Python/issues/201)
+  ⎿  Received 798.2KB (200 OK)
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Ya revisé el README, el Issue y los resultados. Ahora corro las pruebas y la
+  Skill de limpieza para verificar la reproducibilidad.
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && git show
+      HEAD:salidas/pruebas_mcp.txt | head -8; echo ===; (uv run pytest -v 2>&1)
+      > salidas/pruebas_mc…)
+  ⎿  ============================= test session starts ====================
+     =========
+     platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- <proyec
+     … +13 lines (ctrl+o to expand)
+  ⎿  Updated salidas\pruebas_mcp.txt (+21 -21)
+       1 -============================= test session starts =============
+         -================                                               
+       2 -platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- 
+         -<proyecto>\.venv\Scripts\python.exe                            
+       3 -cachedir: .pytest_cache                                        
+       4 -rootdir: <proyecto>                                            
+       5 -configfile: pyproject.toml                                     
+       6 -testpaths: mcp                                                 
+       7 -plugins: anyio-4.16.0, platformdirs-4.14.5                     
+       8 -collecting ... collected 10 items                              
+       9 -                                                               
+      10 -mcp/test_propia.py::test_correlacion_de_una_serie_consigo_misma
+         -_es_uno PASSED [ 10%]                                          
+      11 -mcp/test_propia.py::test_correlacion_rechaza_frecuencias_distin
+         -tas PASSED [ 20%]                                              
+      12 -mcp/test_server.py::test_buscar_encuentra_el_ipc PASSED        
+         -          [ 30%]                                               
+      13 -mcp/test_server.py::test_cuatro_herramientas_como_minimo PASSED
+         -          [ 40%]                                               
+      14 -mcp/test_server.py::test_serie_mensual PASSED                  
+         -          [ 50%]                                               
+      15 -mcp/test_server.py::test_serie_diaria PASSED                   
+         -          [ 60%]                                               
+      16 -mcp/test_server.py::test_resumen_sin_cuentas_a_mano PASSED     
+         -          [ 70%]                                               
+      17 -mcp/test_server.py::test_codigo_inexistente_da_un_error_claro P
+         -ASSED     [ 80%]                                               
+      18 -mcp/test_server.py::test_un_recurso PASSED                     
+         -          [ 90%]                                               
+      19 -mcp/test_server.py::test_un_prompt PASSED                      
+         -          [100%]                                               
+      20 -                                                               
+      21 -============================= 10 passed in 27.30s =============
+         -================                                               
+       1 +============================= test session starts =============
+         +================                                               
+       2 +platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- 
+         +C:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_\.venv\Scripts\
+         +python.exe                                                     
+       3 +cachedir: .pytest_cache                                        
+       4 +rootdir: C:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_      
+       5 +configfile: pyproject.toml                                     
+       6 +testpaths: mcp                                                 
+       7 +plugins: anyio-4.16.0, platformdirs-4.14.5                     
+       8 +collecting ... collected 10 items                              
+       9 +                                                               
+      10 +mcp/test_propia.py::test_correlacion_de_una_serie_consigo_misma
+         +_es_uno PASSED [ 10%]                                          
+      11 +mcp/test_propia.py::test_correlacion_rechaza_frecuencias_distin
+         +tas PASSED [ 20%]                                              
+      12 +mcp/test_server.py::test_buscar_encuentra_el_ipc PASSED        
+         +          [ 30%]                                               
+      13 +mcp/test_server.py::test_cuatro_herramientas_como_minimo PASSED
+         +          [ 40%]                                               
+      14 +mcp/test_server.py::test_serie_mensual PASSED                  
+         +          [ 50%]                                               
+      15 +mcp/test_server.py::test_serie_diaria PASSED                   
+         +          [ 60%]                                               
+      16 +mcp/test_server.py::test_resumen_sin_cuentas_a_mano PASSED     
+         +          [ 70%]                                               
+      17 +mcp/test_server.py::test_codigo_inexistente_da_un_error_claro P
+         +ASSED     [ 80%]                                               
+      18 +mcp/test_server.py::test_un_recurso PASSED                     
+         +          [ 90%]                                               
+      19 +mcp/test_server.py::test_un_prompt PASSED                      
+         +          [100%]                                               
+     … 2 more lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The previous test output had the local path replaced with <proyecto>; I'll
+  check the new one so I don't expose the user folder.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Lo anonimizo con un pequeño script reproducible para que esto no dependa de
+  editar a mano.
+
+● Write(scripts\guardar_pruebas.py)
+  ⎿  Wrote 20 lines to scripts\guardar_pruebas.py
+       1 """Corre las pruebas del MCP y guarda la salida en salidas/prueb
+         as_mcp.txt.
+       2 
+       3 Reemplaza la ruta local del proyecto por <proyecto> para no publ
+         icar el nombre de usuario de la
+       4 computadora. Termina con el mismo código de salida que pytest.
+       5 
+       6 Uso (desde la raíz del proyecto):
+       7     uv run python scripts/guardar_pruebas.py
+       8 """
+     … +12 lines (ctrl+o to expand)
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && uv run python
+      scripts/guardar_pruebas.py && grep -c -i lenovo salidas/pruebas_mcp.txt;
+      git diff salidas…)
+  ⎿  ============================= 10 passed in 4.21s =====================
+     =========
+     0
+     … +15 lines (ctrl+o to expand)
+  ⎿  Updated salidas\pruebas_mcp.txt (+3 -3)
+      1  ============================= test session starts ==============
+         ===============
+      2 -platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- C
+        -:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_\.venv\Scripts\py
+        -thon.exe                                                        
+      2 +platform win32 -- Python 3.14.7, pytest-9.2.0, pluggy-1.7.0 -- <
+        +proyecto>\.venv\Scripts\python.exe                              
+      3  cachedir: .pytest_cache
+      4 -rootdir: C:\Users\LENOVO\Documents\GitHub\Tareas\Tarea_4_       
+      4 +rootdir: <proyecto>                                             
+      5  configfile: pyproject.toml
+      6  testpaths: mcp
+      7  plugins: anyio-4.16.0, platformdirs-4.14.5
+     ...
+      18  mcp/test_server.py::test_un_recurso PASSED                     
+                    [ 90%]
+      19  mcp/test_server.py::test_un_prompt PASSED                      
+                    [100%]
+      20  
+      21 -============================= 10 passed in 5.47s ==============
+         -================                                               
+      21 +============================= 10 passed in 4.21s ==============
+         +================                                               
+  ⎿  (timeout 5m)
+
+● Pruebas: 10 passed; limpieza: 12/12. Ahora reviso credenciales, datos
+  personales y tamaños de lo versionado.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Los registros de la evaluación incluyen la ruta local C:\Users\LENOVO. Reviso
+  qué archivos tienen datos de este tipo y si hay correos o identificadores de
+  cuenta.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● No hay claves ni correos. Verifico también que nunca se haya subido un archivo
+  pesado en el historial.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Sin archivos pesados ni secretos en el historial. Ahora reviso el final de la
+  evidencia de integración y el resto de evidencias para describirlas en el
+  README.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Tengo lo que necesito: haré un módulo compartido scripts/cifras.py que usarán
+  actualizar_readme.py y un nuevo scripts/generar_entrega.py. Antes, guardo en
+  commit las salidas de las pruebas.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Ahora escribo el módulo de lectura de cifras.
+
+● Write(scripts\cifras.py)
+  ⎿  Wrote 94 lines to scripts\cifras.py
+       1 """Lee las cifras de entrega desde los archivos del repositorio.
+       2 
+       3 Lo usan scripts/actualizar_readme.py y scripts/generar_entrega.p
+         y, para que ninguna cifra del
+       4 README ni de ENTREGA.md se escriba a mano. Cada función devuelve
+          el valor y el archivo y la línea
+       5 de donde salió, para poder mostrar el origen.
+       6 
+       7 Si un archivo no tiene el formato esperado, se detiene con un er
+         ror en vez de inventar un valor.
+     … +87 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Las cifras coinciden con comparacion.md. Ajusto un detalle del módulo y
+  extiendo actualizar_readme.py para llenar tres bloques generados (pruebas,
+  validación, evaluación).
+
+● Update(scripts\cifras.py)
+  ⎿  Added 1 line, removed 1 line
+      86  
+      87  
+      88  def pregunta_investigacion() -> dict:
+      89 -    m, linea = _buscar(INFORME, r"^\*\*Pregunta\.\*\* (.*)")   
+      89 +    _buscar(INFORME, r"^\*\*Pregunta\.\*\* ")  # falla con un m
+         +ensaje claro si no está                                        
+      90      texto = _leer(INFORME)
+      91      # La pregunta puede seguir en la línea siguiente: se toma h
+          asta el signo de cierre.
+      92      inicio = texto.index("**Pregunta.**") + len("**Pregunta.**"
+          )
+
+● Write(scripts\actualizar_readme.py)
+  ⎿  Added 55 lines, removed 36 lines
+       1 -"""Inserta en README.md las cifras de validación de la Parte 2,
+         - leídas de los archivos.                                       
+       1 +"""Inserta en README.md las cifras leídas de los archivos, para
+         + que ninguna se escriba a mano.                                
+       2  
+       3 -Reemplaza el texto entre <!-- validacion:inicio --> y <!-- vali
+         -dacion:fin --> con:                                            
+       4 -  - salidas/validacion.txt copiado tal cual;                   
+       5 -  - las filas nacional, área y sexo de salidas/indicadores.csv.
+       6 -Así ninguna cifra del README se escribe a mano.                
+       3 +Reemplaza el texto entre cada par de marcadores <!-- <bloque>:i
+         +nicio --> y <!-- <bloque>:fin -->:                             
+       4 +  - pruebas:    resultado de salidas/pruebas_mcp.txt;          
+       5 +  - validacion: salidas/validacion.txt copiado tal cual y las f
+         +ilas nacional, área y sexo de                                  
+       6 +                salidas/indicadores.csv;                       
+       7 +  - evaluacion: correctas y tiempos por modo de evaluacion/resu
+         +ltados.csv (A y B) y                                           
+       8 +                evaluacion/resultados_b2.csv (análisis compleme
+         +ntario B2).                                                    
+       9  
+      10  Uso (desde la raíz del proyecto):
+      11      uv run python scripts/actualizar_readme.py
+      12  """
+      11 -                                                               
+      13  import sys
+      14  from pathlib import Path
+      15  
+      16  import pandas as pd
+      17  
+      17 -INICIO, FIN = "<!-- validacion:inicio -->", "<!-- validacion:fi
+         -n -->"                                                         
+      18 +sys.path.insert(0, str(Path(__file__).resolve().parent))       
+      19 +import cifras  # noqa: E402                                    
+      20  
+      21 +AVISO = "<!-- Generado por scripts/actualizar_readme.py; no edi
+         +tar a mano. -->"                                               
+      22 +NOMBRE_MODO = {"A": "A · sin MCP ni Skills", "B": "B · con MCP 
+         +y Skills (oficial)",                                           
+      23 +               "B2": "B2 · con MCP y Skills, sin cifras precalc
+         +uladas de la ENAHO"}                                           
+      24  
+      20 -def main() -> None:                                            
+      21 -    sys.stdout.reconfigure(encoding="utf-8")                   
+      22 -    readme = Path("README.md")                                 
+      23 -    validacion = Path("salidas/validacion.txt")                
+      24 -    ind_path = Path("salidas/indicadores.csv")                 
+      25 -    for p in (validacion, ind_path):                           
+      26 -        if not p.exists():                                     
+      27 -            sys.exit(f"ERROR: falta {p}. Corre primero la skill
+         - limpiando-enaho.")                                            
+      25  
+      26 +def bloque_pruebas() -> list[str]:                             
+      27 +    p = cifras.pruebas_mcp()                                   
+      28 +    return [f"Última corrida (`{p['origen']}`): **{p['aprobadas
+         +']} de {p['total']} pruebas aprobadas**.",                     
+      29 +            "", "```text", p["linea"], "```"]                  
+      30 +                                                               
+      31 +                                                               
+      32 +def bloque_validacion() -> list[str]:                          
+      33 +    ind_path = cifras.RAIZ / "salidas/indicadores.csv"         
+      34 +    if not ind_path.exists():                                  
+      35 +        sys.exit("ERROR: falta salidas/indicadores.csv. Corre p
+         +rimero la skill limpiando-enaho.")                             
+      36      ind = pd.read_csv(ind_path, dtype={"codigo": str})
+      37      filas = ind[ind["grupo"].isin(["nacional", "area", "sexo", 
+          "nacional_contraste", "area_contraste"])]
+      38      tabla = ["| Grupo | Categoría | Pobreza (%) | Pobreza extre
+          ma (%) | Ponderador | n muestra |",
+     ...
+      40      for _, f in filas.iterrows():
+      41          tabla.append(f"| {f.grupo} | {f.categoria} | {f.pobreza
+          _pct:.2f} | {f.pobreza_extrema_pct:.2f} "
+      42                       f"| `{f.ponderador}` | {f.n_muestra:,} |")
+      43 +    return ["Contenido de `salidas/validacion.txt`:", "", "```t
+         +ext",                                                          
+      44 +            (cifras.RAIZ / cifras.VALIDACION).read_text(encodin
+         +g="utf-8").rstrip(), "```", "",                                
+      45 +            "Indicadores principales (`salidas/indicadores.csv`
+         +; los 25 departamentos están en ese archivo):",                
+      46 +            "", *tabla]                                        
+      47  
+      37 -    bloque = "\n".join([                                       
+      38 -        INICIO,                                                
+      39 -        "<!-- Generado por scripts/actualizar_readme.py; no edi
+         -tar a mano. -->",                                              
+      40 -        "",                                                    
+      41 -        "Contenido de `salidas/validacion.txt`:",              
+      42 -        "",                                                    
+      43 -        "```text",                                             
+      44 -        validacion.read_text(encoding="utf-8").rstrip(),       
+      45 -        "```",                                                 
+      46 -        "",                                                    
+      47 -        "Indicadores principales (`salidas/indicadores.csv`; lo
+         -s 25 departamentos están en ese archivo):",                    
+      48 -        "",                                                    
+      49 -        *tabla,                                                
+      50 -        FIN,                                                   
+      51 -    ])                                                         
+      48 +                                                               
+      49 +def bloque_evaluacion() -> list[str]:                          
+      50 +    e = cifras.evaluacion()                                    
+      51 +    tabla = ["| Modo | Correctas | Incorrectas | Tiempo promedi
+         +o (s) | Mediana (s) | Archivo |",                              
+      52 +             "|---|---|---|---|---|---|"]                      
+      53 +    for df, origen in ((e["oficial"], e["origen"]), (e["b2"], e
+         +["origen_b2"])):                                               
+      54 +        for modo, f in df.iterrows():                          
+      55 +            tabla.append(f"| {NOMBRE_MODO.get(modo, modo)} | **
+         +{f.correctas} / {f.preguntas}** | "                            
+      56 +                         f"{f.incorrectas} | {f.tiempo_promedio
+         +:.1f} | {f.tiempo_mediana:.1f} | `{origen}` |")                
+      57 +    return [*tabla, "",                                        
+      58 +            f"En las mismas {e['n_b2']} preguntas que B2 (ENAHO
+         + y combinadas), el Modo B oficial tuvo "                       
+      59 +            f"{e['b_en_preguntas_b2']} / {e['n_b2']} correctas 
+         +(`{e['origen']}`)."]                                           
+      60 +                                                               
+      61 +                                                               
+      62 +BLOQUES = {"pruebas": bloque_pruebas, "validacion": bloque_vali
+         +dacion, "evaluacion": bloque_evaluacion}                       
+      63 +                                                               
+      64 +                                                               
+      65 +def main() -> None:                                            
+      66 +    sys.stdout.reconfigure(encoding="utf-8")                   
+      67 +    readme = cifras.RAIZ / "README.md"                         
+      68      texto = readme.read_text(encoding="utf-8")
+      53 -    if texto.count(INICIO) != 1 or texto.count(FIN) != 1:      
+      54 -        sys.exit("ERROR: README.md debe tener una vez cada marc
+         -ador de validación.")                                          
+      55 -    antes, resto = texto.split(INICIO)                         
+      56 -    _, despues = resto.split(FIN)                              
+      57 -    readme.write_text(antes + bloque + despues, encoding="utf-8
+         -")                                                             
+      58 -    print("README.md actualizado con salidas/validacion.txt y s
+         -alidas/indicadores.csv")                                       
+      69 +    for nombre, generar in BLOQUES.items():                    
+      70 +        inicio, fin = f"<!-- {nombre}:inicio -->", f"<!-- {nomb
+         +re}:fin -->"                                                   
+      71 +        if texto.count(inicio) != 1 or texto.count(fin) != 1:  
+      72 +            sys.exit(f"ERROR: README.md debe tener una vez cada
+         + marcador del bloque '{nombre}'.")                             
+      73 +        antes, resto = texto.split(inicio)                     
+      74 +        _, despues = resto.split(fin)                          
+      75 +        texto = antes + "\n".join([inicio, AVISO, "", *generar(
+         +), fin]) + despues                                             
+      76 +    readme.write_text(texto, encoding="utf-8")                 
+      77 +    print("README.md actualizado: bloques " + ", ".join(BLOQUES
+         +))                                                             
+      78  
+      79  
+      80  if __name__ == "__main__":
+● Reviso cómo se invocan los scripts de evaluación para los comandos de
+  reproducción.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ahora reescribo el README con los 12 puntos, conservando el contenido técnico
+  que ya estaba bien.
+
+● Write(README.md)
+  ⎿  Added 286 lines, removed 141 lines
+        2  
+        3  Referencia oficial: <https://github.com/d2cml-ai/Data-Science-
+           Python/issues/201>
+        4  
+        5 -## Pregunta de investigación                                  
+        5 +> **Sobre las cifras de este README.** Ninguna se escribe a ma
+          +no. Los bloques marcados como «Generado por                   
+        6 +> `scripts/actualizar_readme.py`» se leen de `salidas/` y `eva
+          +luacion/`; el resto del texto remite a esos                   
+        7 +> archivos. Para regenerarlos: `uv run python scripts/actualiz
+          +ar_readme.py`.                                                
+        8  
+        7 -> ¿Cómo fue la pobreza monetaria en el Perú en 2024 por área y
+          - departamento, y en qué contexto                              
+        8 -> macroeconómico (inflación, tipo de cambio, actividad económi
+          -ca) ocurrió?                                                  
+        9 +## Contenido                                                  
+       10  
+       10 -El agente responde con datos oficiales y verificables, la **EN
+          -AHO 2024** del INEI y las **series del BCRP**,                
+       11 -usando herramientas que procesan los datos en Python y citan s
+          -u fuente. No responde de memoria.                             
+       11 +1. [Objetivo](#1-objetivo)                                    
+       12 +2. [Arquitectura del agente](#2-arquitectura-del-agente)      
+       13 +3. [Herramientas MCP](#3-herramientas-mcp-mcpserverpy)        
+       14 +4. [Las tres Skills](#4-las-tres-skills-claudeskills)         
+       15 +5. [Fuentes y descarga de datos](#5-fuentes-y-descarga-de-dato
+          +s)                                                            
+       16 +6. [Instalación con uv](#6-instalación-con-uv)                
+       17 +7. [Conectar el MCP a Claude Code](#7-conectar-el-mcp-a-claude
+          +-code)                                                        
+       18 +8. [Reproducir el procesamiento y las pruebas](#8-reproducir-e
+          +l-procesamiento-y-las-pruebas)                                
+       19 +9. [Resultados de la evaluación](#9-resultados-de-la-evaluació
+          +n)                                                            
+       20 +10. [Limitaciones y problemas encontrados](#10-limitaciones-y-
+          +problemas-encontrados)                                        
+       21 +11. [Ejemplo de ejecución completa](#11-ejemplo-de-ejecución-c
+          +ompleta)                                                      
+       22 +12. [Evidencias de uso de IA](#12-evidencias-de-uso-de-ia-evid
+          +encias_ia)                                                    
+       23  
+       13 -## Las 4 partes                                               
+       24 +## 1. Objetivo                                                
+       25  
+       15 -| Parte | Qué hace | Carpeta | Estado |                       
+       16 -|---|---|---|---|                                             
+       17 -| 1. Servidor MCP del BCRP | Datos macroeconómicos: inflación,
+          - tipo de cambio, PBI… | `mcp/` | ✅ |                         
+       18 -| 2. Skills de ENAHO | Pobreza por área, sexo y departamento: 
+          -limpieza, gráficos y mapa | `.claude/skills/` | ✅ |          
+       19 -| 3. Integración | El agente combina ambas fuentes para respon
+          -der | `integracion/` | pendiente |                            
+       20 -| 4. Evaluación y reproducibilidad | Evaluación, documentación
+          - y evidencias | `evaluacion/`, `evidencias_ia/` | pendiente | 
+       26 +Construir un agente en Claude Code que responda preguntas soci
+          +oeconómicas del Perú con **datos oficiales y                  
+       27 +verificables**, sin responder de memoria. Combina dos fuentes:
+       28  
+       22 -## Parte 1 · Servidor MCP del BCRP (`mcp/server.py`)          
+       29 +- **BCRP** (series macroeconómicas), a través de un servidor M
+          +CP propio.                                                    
+       30 +- **ENAHO 2024 del INEI** (microdatos de hogares), a través de
+          + tres Skills que limpian, grafican y mapean.                  
+       31  
+       24 -Usa la API pública del BCRP (<https://estadisticas.bcrp.gob.pe
+          -/estadisticas/series/api>), que no pide clave.                
+       25 -El catálogo de series (~17 mil) se descarga la primera vez a `
+          -mcp/datos/`, que no se sube al repositorio.                   
+       32 +Pregunta de investigación del informe final (`informes/informe
+          +_final.md`):                                                  
+       33  
+       27 -### Herramientas                                              
+       34 +> ¿Cómo evolucionaron la inflación, el tipo de cambio y la act
+          +ividad económica del Perú entre 2020 y 2024,                  
+       35 +> y qué diferencias por área y departamento presentaba la pobr
+          +eza monetaria en 2024?                                        
+       36  
+       37 +| Parte | Qué hace | Dónde |                                  
+       38 +|---|---|---|                                                 
+       39 +| 1. Servidor MCP del BCRP | Busca, descarga, resume, correlac
+          +iona y grafica series del BCRP | `mcp/` |                     
+       40 +| 2. Skills de la ENAHO | Limpieza y validación, gráficos con 
+          +IC 95 % y mapa por departamento | `.claude/skills/` |         
+       41 +| 3. Integración | El agente usa MCP y Skills juntos y escribe
+          + el informe con su verificación | `informes/`, `figuras/`, `ma
+          +pas/`, `salidas/` |                                           
+       42 +| 4. Evaluación | 10 preguntas en dos modos (sin y con MCP/Ski
+          +lls) y análisis complementario B2 | `evaluacion/` |           
+       43 +                                                              
+       44 +## 2. Arquitectura del agente                                 
+       45 +                                                              
+       46 +```mermaid                                                    
+       47 +flowchart LR                                                  
+       48 +    U["Usuario<br/>pregunta en lenguaje natural"] --> CC["Clau
+          +de Code<br/>(agente)"]                                        
+       49 +                                                              
+       50 +    CC -->|"herramientas MCP<br/>(.mcp.json)"| MCP["Servidor M
+          +CP bcrp<br/>mcp/server.py"]                                   
+       51 +    CC -->|"herramienta Skill"| SK["Skills ENAHO<br/>.claude/s
+          +kills/"]                                                      
+       52 +                                                              
+       53 +    MCP --> API[("API pública<br/>BCRPData")]                 
+       54 +    SK --> L["limpiando-enaho"]                               
+       55 +    SK --> G["graficando-enaho"]                              
+       56 +    SK --> M["mapeando-enaho"]                                
+       57 +    L --> INEI[("Microdatos ENAHO 2024<br/>datos/ (no versiona
+          +do)")]                                                        
+       58 +    G -.->|"necesita la base limpia"| L                       
+       59 +    M -.->|"necesita la base limpia"| L                       
+       60 +                                                              
+       61 +    MCP --> S["salidas/<br/>bcrp_*.csv"]                      
+       62 +    MCP --> F["figuras/<br/>bcrp_*.png"]                      
+       63 +    L --> S2["salidas/<br/>validacion.txt, indicadores.csv"]  
+       64 +    G --> F2["figuras/<br/>pobreza_*.png"]                    
+       65 +    G --> S3["salidas/<br/>grafico_por_*.csv"]                
+       66 +    M --> MA["mapas/<br/>pobreza_departamento_2024.png"]      
+       67 +    M --> S4["salidas/<br/>comparacion_mapa.csv"]             
+       68 +                                                              
+       69 +    S & F & S2 & F2 & S3 & MA & S4 --> INF["informes/<br/>info
+          +rme_final.md y verificacion.md"]                              
+       70 +```                                                           
+       71 +                                                              
+       72 +- **Claude Code** decide qué herramienta usar. No calcula cifr
+          +as: las pide al MCP o a los scripts de las                    
+       73 +  Skills, y cita el código de la serie o el archivo de `salida
+          +s/`.                                                          
+       74 +- **MCP `bcrp`** (Python, `fastmcp`) habla con la API del BCRP
+          + y hace las cuentas con pandas.                               
+       75 +- **Skills**: cada una es un `SKILL.md` con instrucciones y un
+          + script fijo, así el resultado es el mismo                    
+       76 +  en cada ejecución. Las Skills de gráfico y mapa activan prim
+          +ero `limpiando-enaho` si falta la base.                       
+       77 +                                                              
+       78 +## 3. Herramientas MCP (`mcp/server.py`)                      
+       79 +                                                              
+       80 +Usa la API pública del BCRP (<https://estadisticas.bcrp.gob.pe
+          +/estadisticas/series/api>), que no pide clave.                
+       81 +El catálogo de series se descarga la primera vez a `mcp/datos/
+          +`, que no se sube al repositorio.                             
+       82 +                                                              
+       83  | Herramienta | Qué hace |
+       84  |---|---|
+       85  | `buscar_series(texto, frecuencia, limite)` | Busca códigos d
+           e serie por palabras (p. ej. "ipc 12 meses"). |
+       86  | `serie(codigo, desde, hasta)` | Datos de la serie con period
+           os normalizados, valores `n.d.` omitidos y `fuente` = URL cons
+           ultada. |
+       87  | `resumen(codigo, desde, hasta)` | Primero, último, cambio, v
+           ariación %, promedio, máximo y mínimo con su periodo (pandas).
+            |
+       88  | `correlacion(codigo_a, codigo_b, desde, hasta)` | **Herramie
+           nta propia.** Correlación de Pearson entre dos series de la mi
+           sma frecuencia: alinea periodos, descarta faltantes, exige ≥ 3
+            periodos y devuelve coeficiente, n, periodos, descartados, fu
+           entes y una nota de que es una asociación descriptiva, no caus
+           al. |
+       35 -| `graficar_serie(codigo, desde, hasta, titulo)` | **Para el i
+          -nforme (Parte 3).** Descarga la serie con la misma lógica que 
+          -`serie` y guarda los datos en `salidas/bcrp_<codigo>.csv` y un
+          - gráfico de línea en `figuras/bcrp_<codigo>.png`. Devuelve las
+          - rutas, el código, el periodo efectivo (primer y último dato),
+          - n y la fuente. |                                             
+       89 +| `graficar_serie(codigo, desde, hasta, titulo)` | Descarga la
+          + serie con la misma lógica que `serie` y guarda `salidas/bcrp_
+          +<codigo>.csv` y un gráfico de línea en `figuras/bcrp_<codigo>.
+          +png`. Devuelve las rutas, el código, el periodo efectivo, n y 
+          +la fuente. |                                                  
+       90  
+       37 -### `graficar_serie`: gráfico para el informe                 
+       91 +Además:                                                       
+       92  
+       39 -Usa el mismo estilo que las figuras de la ENAHO de la Parte 2:
+          - línea azul oscuro (`#1F4E79`), título                        
+       40 -analítico en negrita, subtítulo con el nombre de la serie, la 
+          -**unidad**, la frecuencia y el **periodo**, y la              
+       41 -nota `Fuente: BCRP, serie <codigo>, <url>` con la URL exacta c
+          -onsultada. El último valor se rotula en la línea.             
+       42 -                                                              
+       43 -- `titulo`: la frase con el hallazgo. Sus cifras deben salir d
+          -e `resumen`, no de memoria. Si se deja vacío,                 
+       44 -  se arma solo con el primer y el último valor de los datos de
+          -scargados.                                                    
+       45 -- La unidad se toma de la columna «Unidad de medida» del catál
+          -ogo; si está vacía, del último paréntesis del                 
+       46 -  nombre de la serie (p. ej. `var% 12 meses`, `S/ por US$`).  
+       47 -- Si hubo periodos sin dato (`n.d.`), la nota dice cuántos se 
+          -omitieron.                                                    
+       48 -- El CSV trae `periodo`, `valor`, `codigo`, `nombre`, `unidad`
+          - y `fuente`, para verificar cada cifra.                       
+       49 -                                                              
+       50 -Ejemplo: `graficar_serie("PN01273PM", "2024-01", "2025-12", "<
+          -hallazgo tomado de resumen>")` →                              
+       51 -`figuras/bcrp_PN01273PM.png` y `salidas/bcrp_PN01273PM.csv`.  
+       52 -                                                              
+       53 -### Recurso y prompt                                          
+       54 -                                                              
+       55 -- **Recurso** `bcrp://serie/{codigo}`: ficha descriptiva de la
+          - serie (nombre, categoría, frecuencia, inicio,                
+       56 -  última actualización y enlace de la API).                   
+       93 +- **Recurso** `bcrp://serie/{codigo}`: ficha de la serie (nomb
+          +re, categoría, frecuencia, inicio, última                     
+       94 +  actualización y enlace de la API).                          
+       95  - **Prompt** `informe(tema)`: pide un informe en el que cada c
+           ifra cite **código, periodo y fuente**, use solo
+       96    las herramientas y no presente asociaciones como causales.
+       97  
+       98 +### `graficar_serie`: gráfico para el informe                 
+       99 +                                                              
+      100 +Usa el mismo estilo que las figuras de la ENAHO: línea azul os
+          +curo (`#1F4E79`), título analítico, subtítulo                 
+      101 +con el nombre de la serie, la **unidad**, la frecuencia y el *
+          +*periodo**, y la nota                                         
+      102 +`Fuente: BCRP, serie <codigo>, <url>`. El `titulo` debe salir 
+          +de `resumen`, no de memoria; si se deja vacío,                
+      103 +se arma con el primer y el último valor descargados. La unidad
+          + sale del catálogo o, si falta, del último                    
+      104 +paréntesis del nombre de la serie. Si hubo periodos `n.d.`, la
+          + nota dice cuántos se omitieron.                              
+      105 +                                                              
+      106  ### Parseo de fechas
+      107  
+       62 -La API usa un formato para lo que se le **pide** y otro para l
+          -o que **devuelve**, así que hay dos funciones:                
+      108 +La API usa un formato para lo que se le **pide** y otro para l
+          +o que **devuelve**:                                           
+      109  
+      110  - `_periodo_api(periodo, frecuencia, fin)` traduce lo que escr
+           ibe el usuario (`2025`, `2025-03`,
+       65 -  `2025-03-15`, `2025-T1`) al formato que pide la API según la
+          - frecuencia de la serie: diaria `2025-03-15`,                 
+       66 -  mensual `2025-3`, trimestral `2025-1`, anual `2025`.        
+       67 -- `_normalizar_periodo(nombre)` traduce lo que devuelve la API
+          - a un formato estándar y ordenable:                           
+      111 +  `2025-03-15`, `2025-T1`) al formato de la API según la frecu
+          +encia: diaria `2025-03-15`, mensual `2025-3`,                 
+      112 +  trimestral `2025-1`, anual `2025`.                          
+      113 +- `_normalizar_periodo(nombre)` traduce la respuesta a un form
+          +ato ordenable:                                                
+      114  
+      115  | La API devuelve | Normalizado |
+      116  |---|---|
+     ...
+      121  | `2025` | `2025` |
+      122  
+      123  Los meses se leen de un diccionario propio en español (incluye
+            `Set` y `Sep`), así el resultado no depende
+       78 -del idioma (locale) de la computadora. Los años de dos dígitos
+          - siguen el corte de Python: `00–68` → 20xx y                  
+      124 +del idioma de la computadora. Los años de dos dígitos siguen e
+          +l corte de Python: `00–68` → 20xx y                           
+      125  `69–99` → 19xx.
+      126  
+       81 -## Instalación                                                
+      127 +## 4. Las tres Skills (`.claude/skills/`)                     
+      128  
+       83 -Requiere [uv](https://docs.astral.sh/uv/).                    
+      129 +Metodología: [Sesión 16 del curso](https://github.com/d2cml-ai
+          +/Data-Science-Python/tree/main/sessions/16-skills-enaho).     
+      130 +Se versionan con el repositorio. Cada una corre un script fijo
+          +.                                                             
+      131  
+      132 +| Skill | Qué hace | Entra | Sale |                           
+      133 +|---|---|---|---|                                             
+      134 +| `limpiando-enaho` | Lee los módulos 34 y 02, filtra resident
+          +es habituales, une con `validate="m:1"`, construye departament
+          +o, área, sexo y pobreza; pondera y valida contra las cifras of
+          +iciales | `datos/966-Modulo34.zip`, `datos/966-Modulo02.zip` |
+          + `salidas/personas_2024.parquet` y `salidas/hogares_2024.parqu
+          +et` (no se suben), `salidas/indicadores.csv`, `salidas/validac
+          +ion.txt` |                                                    
+      135 +| `graficando-enaho` | Barras de pobreza (o pobreza extrema) p
+          +or área, sexo, edad y departamento, con IC 95 % del diseño mue
+          +stral y el promedio nacional | los dos parquet | `figuras/pobr
+          +eza_{area,sexo,edad,departamento}_2024.png`, `salidas/grafico_
+          +por_<corte>_2024.csv` |                                       
+      136 +| `mapeando-enaho` | Mapa coroplético por departamento, unido 
+          +por código (`ubigeo[:2]` = `FIRST_IDDP`, no por nombre) y comp
+          +arado con la referencia del curso | los dos parquet, el GeoJSO
+          +N y el CSV de referencia | `mapas/pobreza_departamento_2024.pn
+          +g`, `salidas/comparacion_mapa.csv` |                          
+      137 +                                                              
+      138 +`graficando-enaho` y `mapeando-enaho` dicen: «Si no existe `sa
+          +lidas/personas_2024.parquet`, usa primero la                  
+      139 +skill `limpiando-enaho`». Así un pedido como «Haz un mapa de l
+          +a pobreza monetaria por departamento con                      
+      140 +ENAHO 2024» activa dos Skills seguidas (evidencia en `evidenci
+          +as_ia/skills/03_prueba_coordinacion_parte2.txt`).             
+      141 +                                                              
+      142 +Si una validación esencial falla, `limpiar.py` termina con err
+          +or y no guarda la base. Nunca se ajustan                      
+      143 +resultados para que coincidan.                                
+      144 +                                                              
+      145 +### Ponderación                                               
+      146 +                                                              
+      147 +Toda cifra está ponderada. La base de personas usa `facpob07` 
+          +(factor de expansión de cada persona). La                     
+      148 +sumaria usa `factor07 × mieperho`, porque cada hogar represent
+          +a a tantas personas como su factor por el                     
+      149 +número de miembros. Las cifras oficiales por área y la referen
+          +cia por departamento usan la sumaria, así que                 
+      150 +los gráficos de área y departamento y el mapa también; sexo y 
+          +edad, atributos de cada persona, usan                         
+      151 +`facpob07`. Las dos ponderaciones difieren en décimas porque e
+          +n algunos hogares los residentes habituales no                
+      152 +coinciden con `mieperho`; el detalle está en `salidas/validaci
+          +on.txt`. Los IC 95 % usan linealización de                    
+      153 +Taylor (UPM = `conglome`; estratos = departamento × estrato). 
+      154 +                                                              
+      155 +### Cifras de validación                                      
+      156 +                                                              
+      157 +<!-- validacion:inicio -->                                    
+      158 +<!-- validacion:fin -->                                       
+      159 +                                                              
+      160 +## 5. Fuentes y descarga de datos                             
+      161 +                                                              
+      162 +| Fuente | Qué se usa | Enlace |                              
+      163 +|---|---|---|                                                 
+      164 +| BCRP – BCRPData | Series mensuales (inflación `PN01273PM`, t
+          +ipo de cambio `PN01206PM`, PBI `PN01728AM`) | <https://estadis
+          +ticas.bcrp.gob.pe/estadisticas/series/> · API: <https://estadi
+          +sticas.bcrp.gob.pe/estadisticas/series/api> |                 
+      165 +| INEI – ENAHO 2024 (código 966) | Módulo 34 (sumaria) y módul
+          +o 02 (miembros del hogar), formato STATA | <https://proyectos.
+          +inei.gob.pe/microdatos/> |                                    
+      166 +| INEI – informe técnico | «Perú: Evolución de la Pobreza Mone
+          +taria 2015-2024», para verificar cifras oficiales | <https://w
+          +ww.inei.gob.pe/> |                                            
+      167 +| Curso – Sesión 06 | GeoJSON de departamentos | [`peru_depart
+          +amental_simple.geojson`](https://github.com/d2cml-ai/Data-Scie
+          +nce-Python/blob/main/sessions/06-geoespacial/lab/Data/peru_dep
+          +artamental_simple.geojson) |                                  
+      168 +| Curso – Sesión 16 | Referencia de pobreza por departamento |
+          + [`pobreza_departamento_2024.csv`](https://github.com/d2cml-ai
+          +/Data-Science-Python/blob/main/sessions/16-skills-enaho/refere
+          +ncias/pobreza_departamento_2024.csv) |                        
+      169 +                                                              
+      170 +Las series del BCRP se descargan solas al usar el MCP. Los dat
+          +os de la ENAHO van en `datos/`, que no se sube                
+      171 +al repositorio (tampoco los `.zip`, los `.dta` ni los `.parque
+          +t`):                                                          
+      172 +                                                              
+      173  ```powershell
+       86 -uv sync                                                       
+      174 +New-Item -ItemType Directory -Force datos, figuras, mapas | Ou
+          +t-Null                                                        
+      175 +$base = "https://proyectos.inei.gob.pe/iinei/srienaho/descarga
+          +/STATA"                                                       
+      176 +Invoke-WebRequest "$base/966-Modulo34.zip" -OutFile datos/966-
+          +Modulo34.zip                                                  
+      177 +Invoke-WebRequest "$base/966-Modulo02.zip" -OutFile datos/966-
+          +Modulo02.zip                                                  
+      178 +$curso = "https://raw.githubusercontent.com/d2cml-ai/Data-Scie
+          +nce-Python/main/sessions"                                     
+      179 +Invoke-WebRequest "$curso/06-geoespacial/lab/Data/peru_departa
+          +mental_simple.geojson" -OutFile datos/peru_departamental_simpl
+          +e.geojson                                                     
+      180 +Invoke-WebRequest "$curso/16-skills-enaho/referencias/pobreza_
+          +departamento_2024.csv" -OutFile datos/pobreza_departamento_202
+          +4.csv                                                         
+      181  ```
+      182  
+       89 -## Pruebas                                                    
+      183 +Si el servidor del INEI no responde, baje los dos zip con el n
+          +avegador desde el portal de microdatos.                       
+      184 +`pobreza_departamento_2024.csv` es la referencia de la Sesión 
+          +16 del curso, calculada con la ENAHO 2024; no                 
+      185 +es un archivo publicado por el INEI.                          
+      186  
+      187 +## 6. Instalación con uv                                      
+      188 +                                                              
+      189 +Requiere [uv](https://docs.astral.sh/uv/) (instala Python 3.14
+          + si hace falta) y, para el agente,                            
+      190 +[Claude Code](https://docs.claude.com/en/docs/claude-code).   
+      191 +                                                              
+      192  ```powershell
+       92 -uv run pytest -v                                              
+      193 +git clone https://github.com/estefmej/Tarea_4_.git            
+      194 +cd Tarea_4_                                                   
+      195 +uv sync          # crea .venv con fastmcp, pandas, geopandas, 
+          +matplotlib, pyarrow y pytest                                  
+      196  ```
+      197  
+       95 -Son 10 pruebas: las 8 originales de la Sesión 04 (`mcp/test_se
+          -rver.py`, sin modificar) y 2 propias                          
+       96 -(`mcp/test_propia.py`). Consultan la API real del BCRP, así qu
+          -e necesitan internet. La última salida está en                
+       97 -`salidas/pruebas_mcp.txt`.                                    
+      198 +## 7. Conectar el MCP a Claude Code                           
+      199  
+       99 -## Conectar el servidor a Claude Code                         
+      200 +El repositorio ya incluye `.mcp.json` (servidor `bcrp`, transp
+          +orte stdio, `uv run mcp/server.py`). Si hiciera               
+      201 +falta registrarlo de nuevo:                                   
+      202  
+      101 -El repositorio ya incluye `.mcp.json`. Si hiciera falta regist
+          -rarlo de nuevo:                                               
+      102 -                                                              
+      203  ```powershell
+      204  claude mcp add --scope project bcrp -- uv run mcp/server.py
+      205  ```
+     ...
+      209  - `/mcp` → `bcrp` debe aparecer conectado con 5 herramientas.
+      210  - `@bcrp:bcrp://serie/PN01273PM` → adjunta la ficha de la seri
+           e.
+      211  - `/bcrp:informe` (o `/mcp__bcrp__informe`) → prompt de inform
+           e con citas.
+      212 +- `/skills` → deben aparecer `limpiando-enaho`, `graficando-en
+          +aho` y `mapeando-enaho`.                                      
+      213  
+      113 -## Parte 2 · Skills para procesar y analizar la ENAHO (`.claud
+          -e/skills/`)                                                   
+      214 +## 8. Reproducir el procesamiento y las pruebas               
+      215  
+      115 -Metodología: [Sesión 16 del curso](https://github.com/d2cml-ai
+          -/Data-Science-Python/tree/main/sessions/16-skills-enaho).     
+      116 -Tres skills de Claude Code que se versionan con el repositorio
+          -. Cada una corre un script fijo, así el                       
+      117 -resultado es el mismo cada vez.                               
+      216 +Desde la raíz del proyecto, con los datos de la sección 5 en `
+          +datos/`:                                                      
+      217  
+      119 -| Skill | Qué hace | Entra | Sale |                           
+      120 -|---|---|---|---|                                             
+      121 -| `limpiando-enaho` | Lee los módulos 34 y 02, filtra resident
+          -es habituales, une con `validate="m:1"`, construye departament
+          -o, área, sexo y pobreza; pondera y valida | `datos/966-Modulo3
+          -4.zip`, `datos/966-Modulo02.zip` | `salidas/personas_2024.parq
+          -uet` y `salidas/hogares_2024.parquet` (no se suben), `salidas/
+          -indicadores.csv`, `salidas/validacion.txt` |                  
+      122 -| `graficando-enaho` | Barras de pobreza (o pobreza extrema) p
+          -or área, sexo, edad y departamento, con IC 95 % del diseño mue
+          -stral y el promedio nacional | los dos parquet | `figuras/pobr
+          -eza_{area,sexo,edad,departamento}_2024.png`, `salidas/grafico_
+          -por_<corte>_2024.csv` |                                       
+      123 -| `mapeando-enaho` | Mapa coroplético por departamento con la 
+          -sumaria (`factor07 × mieperho`), unido por código (`ubigeo[:2]
+          -` = `FIRST_IDDP`) y comparado con la referencia | los dos parq
+          -uet, el GeoJSON y el CSV de referencia | `mapas/pobreza_depart
+          -amento_2024.png`, `salidas/comparacion_mapa.csv` |            
+      218 +```powershell                                                 
+      219 +# Pruebas del MCP (consultan la API real del BCRP: necesitan i
+          +nternet)                                                      
+      220 +uv run pytest -q                                              
+      221 +uv run python scripts/guardar_pruebas.py      # misma corrida;
+          + guarda salidas/pruebas_mcp.txt sin rutas locales             
+      222  
+      125 -`graficando-enaho` y `mapeando-enaho` dicen: «Si no existe `sa
+          -lidas/personas_2024.parquet`, usa primero                     
+      126 -la skill `limpiando-enaho`». Así un solo pedido (por ejemplo, 
+          -«Haz un mapa de la pobreza monetaria por                      
+      127 -departamento con ENAHO 2024») activa dos skills seguidas.     
+      223 +# ENAHO: las tres Skills sin Claude Code                      
+      224 +uv run python .claude/skills/limpiando-enaho/scripts/limpiar.p
+          +y --anio 2024                                                 
+      225 +uv run python .claude/skills/graficando-enaho/scripts/graficar
+          +.py --por todos   # --indicador extrema: pobreza extrema      
+      226 +uv run python .claude/skills/mapeando-enaho/scripts/mapear.py 
+      227  
+      129 -### Ponderación                                               
+      228 +# Informe: contraste de cifras con sus archivos de origen     
+      229 +uv run python scripts/contraste_informe.py    # salidas/contra
+          +ste_informe.txt                                               
+      230  
+      131 -Toda cifra está ponderada; nunca se usan promedios simples. La
+          - base de personas usa `facpob07`, el factor                   
+      132 -de expansión de cada persona. La sumaria usa `factor07 × miepe
+          -rho`, porque cada hogar representa a tantas                   
+      133 -personas como su factor por el número de miembros. Las cifras 
+          -oficiales por área y la referencia por                        
+      134 -departamento usan la sumaria, así que los gráficos de área y d
+          -epartamento y el mapa también la usan; sexo                   
+      135 -y edad, que son atributos de cada persona, usan `facpob07`. La
+          -s dos ponderaciones difieren en décimas                       
+      136 -porque en algunos hogares los residentes habituales no coincid
+          -en con `mieperho`; el detalle está en                         
+      137 -`salidas/validacion.txt`.                                     
+      231 +# Evaluación (requiere Claude Code con sesión iniciada)       
+      232 +uv run evaluacion/esperadas_bcrp.py           # respuestas esp
+          +eradas del BCRP, directo de la API                            
+      233 +uv run evaluacion/ejecutar.py --modos A B     # corrida oficia
+          +l                                                             
+      234 +uv run evaluacion/calificar.py                # evaluacion/res
+          +ultados.csv                                                   
+      235 +uv run evaluacion/ejecutar.py --modos B2 --ids E1 E2 E3 E4 C1 
+          +C2                                                            
+      236 +uv run evaluacion/calificar.py --b2           # evaluacion/res
+          +ultados_b2.csv                                                
+      237  
+      139 -### Descargar los datos                                       
+      238 +# Documentación generada desde los archivos                   
+      239 +uv run python scripts/actualizar_readme.py    # bloques de cif
+          +ras de este README                                            
+      240 +uv run python scripts/generar_entrega.py      # ENTREGA.md (co
+          +mentario para el Issue)                                       
+      241 +```                                                           
+      242  
+      141 -Los datos van en `datos/`, que no se sube al repositorio (tamp
+          -oco los `.zip`, los `.dta` ni el parquet).                    
+      243 +Dentro de Claude Code, las Skills se invocan con `/limpiando-e
+          +naho`, `/graficando-enaho todos` y                            
+      244 +`/mapeando-enaho`, o con un pedido en lenguaje natural.       
+      245  
+      143 -```powershell                                                 
+      144 -New-Item -ItemType Directory -Force datos, figuras, mapas | Ou
+          -t-Null                                                        
+      145 -$base = "https://proyectos.inei.gob.pe/iinei/srienaho/descarga
+          -/STATA"                                                       
+      146 -Invoke-WebRequest "$base/966-Modulo34.zip" -OutFile datos/966-
+          -Modulo34.zip                                                  
+      147 -Invoke-WebRequest "$base/966-Modulo02.zip" -OutFile datos/966-
+          -Modulo02.zip                                                  
+      148 -$curso = "https://raw.githubusercontent.com/d2cml-ai/Data-Scie
+          -nce-Python/main/sessions"                                     
+      149 -Invoke-WebRequest "$curso/06-geoespacial/lab/Data/peru_departa
+          -mental_simple.geojson" -OutFile datos/peru_departamental_simpl
+          -e.geojson                                                     
+      150 -Invoke-WebRequest "$curso/16-skills-enaho/referencias/pobreza_
+          -departamento_2024.csv" -OutFile datos/pobreza_departamento_202
+          -4.csv                                                         
+      151 -```                                                           
+      246 +Las pruebas son las 8 originales de la Sesión 04 (`mcp/test_se
+          +rver.py`, sin modificar) y 2 propias de                       
+      247 +`correlacion` (`mcp/test_propia.py`).                         
+      248  
+      153 -`966` es el código de la ENAHO 2024 en el portal del INEI. Si 
+          -el servidor del INEI no responde, baje los                    
+      154 -dos zip con el navegador. `pobreza_departamento_2024.csv` es l
+          -a referencia de la Sesión 16 del curso,                       
+      155 -calculada con ENAHO 2024 del INEI; no es un archivo publicado 
+          -por el INEI.                                                  
+      249 +<!-- pruebas:inicio -->                                       
+      250 +<!-- pruebas:fin -->                                          
+      251  
+      157 -### Ejecutar                                                  
+      252 +## 9. Resultados de la evaluación                             
+      253  
+      159 -Dentro de Claude Code: `/limpiando-enaho`, `/graficando-enaho 
+          -todos` y `/mapeando-enaho`, o un pedido en                    
+      160 -lenguaje natural. Sin Claude Code, desde la raíz del proyecto:
+      254 +Diseño, regla de calificación y análisis completo: [`evaluacio
+          +n/comparacion.md`](evaluacion/comparacion.md).                
+      255 +Detalle por pregunta: [`evaluacion/resultados.csv`](evaluacion
+          +/resultados.csv) (oficial) y                                  
+      256 +[`evaluacion/resultados_b2.csv`](evaluacion/resultados_b2.csv)
+          + (complementario).                                            
+      257  
+      162 -```powershell                                                 
+      163 -uv run python .claude/skills/limpiando-enaho/scripts/limpiar.p
+          -y --anio 2024                                                 
+      164 -uv run python .claude/skills/graficando-enaho/scripts/graficar
+          -.py --por todos   # --indicador extrema: pobreza extrema      
+      165 -uv run python .claude/skills/mapeando-enaho/scripts/mapear.py 
+      166 -uv run python scripts/actualizar_readme.py   # actualiza las c
+          -ifras de abajo                                                
+      167 -```                                                           
+      258 +- **Preguntas** (`evaluacion/preguntas.csv`): 10 en total, 4 d
+          +el BCRP, 4 de la ENAHO 2024 y 2 combinadas.                   
+      259 +  Las respuestas esperadas del BCRP salen de la API (`esperada
+          +s_bcrp.py`, sin pasar por el MCP) y las de la                 
+      260 +  ENAHO del informe técnico del INEI.                         
+      261 +- **Modos.** A: `claude -p` en una carpeta vacía, sin MCP, sin
+          + Skills ni lectura de archivos. B: en el repo,                
+      262 +  con el MCP `bcrp` y las Skills. Mismo modelo e instrucción e
+          +n ambos; cada pregunta en una sesión nueva.                   
+      263 +- **Calificación automática** (`evaluacion/calificar.py`), fij
+          +ada y registrada en git antes de la corrida.                  
+      264 +- **B2 (complementario, posterior a la corrida oficial):** rep
+          +ite las preguntas de la ENAHO y combinadas en                 
+      265 +  el Modo B, pero bloquea todos los archivos con cifras ya cal
+          +culadas, para ver si el modelo ejecuta las                    
+      266 +  Skills. No reemplaza el resultado oficial.                  
+      267  
+      169 -Si una validación esencial falla, `limpiar.py` termina con err
+          -or y no guarda la base. Nunca se ajustan                      
+      170 -resultados para que coincidan.                                
+      268 +<!-- evaluacion:inicio -->                                    
+      269 +<!-- evaluacion:fin -->                                       
+      270  
+      172 -### Cifras de validación                                      
+      271 +**Lectura** (detalle en `comparacion.md`, secciones 5.3–5.5 y 
+          +7.4–7.5):                                                     
+      272  
+      174 -<!-- validacion:inicio -->                                    
+      175 -<!-- Generado por scripts/actualizar_readme.py; no editar a ma
+          -no. -->                                                       
+      273 +- El **MCP** explica la mejora en las preguntas del BCRP: el M
+          +odo B lo usó en todas ellas, con el código de                 
+      274 +  serie correcto, y acertó los datos que exigen precisión, que
+          + el Modo A falló de memoria.                                  
+      275 +- En la corrida oficial el Modo B acertó las preguntas de la E
+          +NAHO **sin invocar ninguna Skill**: leyó cifras               
+      276 +  que las Skills ya habían dejado en el repositorio. En **B2**
+          +, sin esas cifras, el modelo tampoco invocó la                
+      277 +  herramienta `Skill` y volvió a responder de memoria o a abst
+          +enerse; solo en una pregunta ejecutó a mano el                
+      278 +  script de `limpiando-enaho` y obtuvo la cifra exacta.       
+      279 +- Varias respuestas incorrectas tenían las cifras correctas pe
+          +ro agregaron números de más (etiquetas como                   
+      280 +  «(12 meses)» o la cuenta de una resta) y la regla las marca 
+          +como ambiguas. La regla no se cambió después.                 
+      281 +- Ningún modo afirmó causalidad entre inflación y pobreza.    
+      282  
+      177 -Contenido de `salidas/validacion.txt`:                        
+      283 +## 10. Limitaciones y problemas encontrados                   
+      284  
+      179 -```text                                                       
+      180 -Validación ENAHO 2024 (INEI, código 966) — skill limpiando-ena
+          -ho                                                            
+      181 -Tolerancia para porcentajes: 0.1 puntos porcentuales. Todas la
+          -s cifras de pobreza están ponderadas.                         
+      182 -Cada cifra se compara con la referencia calculada con el mismo
+          - método.                                                      
+      285 +**Del agente y la evaluación**                                
+      286  
+      184 -[APROBADA] Llaves únicas en la sumaria (conglome, vivienda, ho
+          -gar): 33,691 hogares; referencia 33,691                       
+      185 -[APROBADA] Hogares en la sumaria: 33,691 (referencia 33,691)  
+      186 -[APROBADA] Llaves únicas en personas (conglome, vivienda, hoga
+          -r, codperso): 108,664 filas                                   
+      187 -[APROBADA] Residentes habituales: 108,664 de 117,721 filas del
+          - módulo 02 (referencia 108,664)                               
+      188 -[APROBADA] Unión m:1 sin perder filas: 108,664 filas tras unir
+          -; 0 personas sin hogar en la sumaria                          
+      189 -[APROBADA] Unión sin duplicar personas: cada persona aparece u
+          -na vez                                                        
+      190 -[APROBADA] Sin vacíos en pobreza, facpob07, ubigeo, estrato y 
+          -sexo: {'pobreza': 0, 'facpob07': 0, 'ubigeo': 0, 'estrato': 0,
+          - 'sexo': 0}                                                   
+      191 -[APROBADA] 25 códigos de departamento (01-25): 25 códigos: 01,
+          - 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 1
+          -7, 18, 19, 20, 21, 22, 23, 24, 25                             
+      192 -[APROBADA] Pobreza nacional (personas, facpob07) a ≤0.1 pp de 
+          -27.6 %: 27.53 % (diferencia -0.07 pp)                         
+      193 -[APROBADA] Pobreza nacional (sumaria, factor07 × mieperho) a ≤
+          -0.1 pp de 27.6 %: 27.58 % (diferencia -0.02 pp)               
+      194 -[APROBADA] Pobreza urbana (sumaria, factor07 × mieperho) ≈ 24.
+          -8 % (≤0.1 pp): 24.81 % (diferencia +0.01 pp)                  
+      195 -[APROBADA] Pobreza rural (sumaria, factor07 × mieperho) ≈ 39.3
+          - % (≤0.1 pp): 39.30 % (diferencia +0.00 pp)                   
+      287 +- **Baja activación automática de Skills en `claude -p`.** En 
+          +modo no interactivo (`claude -p`, modelo                      
+      288 +  `sonnet`), la herramienta `Skill` no se invocó en ninguna se
+          +sión de la evaluación, ni en la corrida oficial               
+      289 +  ni en B2, aunque las Skills estaban disponibles y permitidas
+          +. El modelo prefirió buscar archivos o responder              
+      290 +  de memoria. En cambio, en las sesiones interactivas (Partes 
+          +2 y 3) las Skills sí se activaron con pedidos en              
+      291 +  lenguaje natural. Que una Skill exista no basta: habría que 
+          +hacer su descripción más explícita («úsala para               
+      292 +  cualquier cifra de pobreza de la ENAHO 2024») o pedirla en l
+          +a instrucción.                                                
+      293 +- **Filtración de cifras en el Modo B oficial.** Se bloquearon
+          + `evaluacion/`, `informes/`, `evidencias_ia/` y               
+      294 +  `salidas/bcrp_*`, pero el README, `reference.md`, `datos/pob
+          +reza_departamento_2024.csv` y otras salidas de                
+      295 +  las Skills también tenían las cifras de la ENAHO. Por eso se
+          + hizo B2.                                                     
+      296 +- **`--permission-mode dontAsk` aprueba solo los comandos Bash
+          + de solo lectura** (`ls`, `cat`, `grep`) aunque               
+      297 +  no estén en la lista permitida. En B2 se denegaron explícita
+          +mente.                                                        
+      298 +- **Formato de respuesta.** La regla trata como ambigua una lí
+          +nea con más números de los esperados; un                      
+      299 +  formato de respuesta más estricto reduciría ese ruido.      
+      300 +- **Una sola corrida** por pregunta y modo, y solo 6 preguntas
+          + en B2: los resultados son indicativos.                       
+      301  
+      197 -[INFORMATIVA] Pobreza por área con personas y facpob07 (contra
+          -ste; los gráficos de área y departamento y el mapa usan la sum
+          -aria, los de sexo y edad usan personas): urbano 24.74 %, rural
+          - 39.44 %.                                                     
+      198 -[INFORMATIVA] Difiere de la sumaria porque en 1,846 de 33,691 
+          -hogares (5.5%) los residentes habituales del módulo 02 no coin
+          -ciden con mieperho (el INEI excluye de mieperho a trabajadores
+          - del hogar y pensionistas). Son dos ponderaciones válidas; nin
+          -guna cifra se ajustó.                                         
+      302 +**De los datos y el análisis**                                
+      303  
+      200 -Resultado: 12 de 12 verificaciones aprobadas.                 
+      201 -```                                                           
+      304 +- La inflación del BCRP usada (`PN01273PM`) es de **Lima Metro
+          +politana**, no nacional.                                      
+      305 +- Las series del BCRP son mensuales 2020-2024 y la ENAHO es un
+          + corte anual de 2024: distinto nivel de                       
+      306 +  agregación y periodo. Toda relación entre ambas es una **aso
+          +ciación descriptiva, no causal**.                             
+      307 +- El departamento **15 (Lima)** de la ENAHO no coincide con la
+          +s categorías que publica el INEI («Lima                       
+      308 +  Metropolitana», que incluye Callao, y «Lima región»), así qu
+          +e no se compara directamente con el INEI.                     
+      309 +- Los porcentajes por persona (`facpob07`) y por hogar (`facto
+          +r07 × mieperho`) difieren en décimas; ambos se                
+      310 +  reportan en `salidas/validacion.txt` y no se ajustó ninguno.
+      311 +- La referencia por departamento es la de la Sesión 16 del cur
+          +so, no un archivo oficial del INEI.                           
+      312  
+      203 -Indicadores principales (`salidas/indicadores.csv`; los 25 dep
+          -artamentos están en ese archivo):                             
+      313 +**Problemas técnicos resueltos**                              
+      314  
+      205 -| Grupo | Categoría | Pobreza (%) | Pobreza extrema (%) | Pond
+          -erador | n muestra |                                          
+      206 -|---|---|---|---|---|---|                                     
+      207 -| nacional | Perú | 27.53 | 5.50 | `facpob07` | 108,664 |     
+      208 -| area | Rural | 39.44 | 15.60 | `facpob07` | 36,071 |        
+      209 -| area | Urbano | 24.74 | 3.13 | `facpob07` | 72,593 |        
+      210 -| sexo | Hombre | 27.37 | 5.37 | `facpob07` | 52,587 |        
+      211 -| sexo | Mujer | 27.68 | 5.62 | `facpob07` | 56,077 |         
+      212 -| nacional_contraste | Perú (sumaria, factor07 × mieperho) | 2
+          -7.58 | 5.50 | `factor07*mieperho` | 33,691 |                  
+      213 -| area_contraste | Rural (sumaria, factor07 × mieperho) | 39.3
+          -0 | 15.52 | `factor07*mieperho` | 11,660 |                    
+      214 -| area_contraste | Urbano (sumaria, factor07 × mieperho) | 24.
+          -81 | 3.14 | `factor07*mieperho` | 22,031 |                    
+      215 -<!-- validacion:fin -->                                       
+      315 +- La API del BCRP mezcla `Set` y `Sep` para setiembre y usa fo
+          +rmatos distintos para pedir y devolver periodos:              
+      316 +  se resolvió con un diccionario propio de meses y dos funcion
+          +es de conversión (sección 3).                                 
+      317 +- Un código de serie inexistente devuelve un error claro («No 
+          +existe el código de serie… Búsquenlo con                      
+      318 +  buscar_series») en lugar de datos inventados (probado en `te
+          +st_codigo_inexistente_da_un_error_claro` y en                 
+      319 +  la Parte 3).                                                
+      320 +- La API del BCRP y el portal del INEI a veces tardan o no res
+          +ponden: las pruebas necesitan internet y los zip              
+      321 +  del INEI pueden bajarse con el navegador.                   
+      322 +- En Windows, la consola usa `cp1252`: los scripts fuerzan UTF
+          +-8 al leer y escribir.                                        
+      323  
+      324 +## 11. Ejemplo de ejecución completa                          
+      325 +                                                              
+      326 +Registro completo: [`evidencias_ia/integracion/02_ejecucion_ag
+          +ente.txt`](evidencias_ia/integracion/02_ejecucion_agente.txt).
+      327 +                                                              
+      328 +1. **Pedido** (en `claude`, interactivo, en la raíz del repo):
+          + la pregunta de investigación, con la                         
+      329 +   instrucción de usar el MCP `bcrp` para las series del BCRP,
+          + las Skills para la ENAHO, generar                            
+      330 +   `informes/informe_final.md` y `informes/verificacion.md`, c
+          +itar la fuente de cada cifra y probar un caso de              
+      331 +   error.                                                     
+      332 +2. **Plan.** El agente revisó el repositorio, propuso un plan 
+          +(series, Skills, figuras) y esperó la aprobación.             
+      333 +3. **BCRP con el MCP.** `buscar_series` para identificar infla
+          +ción, tipo de cambio y PBI; `resumen` para                    
+      334 +   2020-2024; `graficar_serie` para los tres gráficos (`figura
+          +s/bcrp_*.png`, `salidas/bcrp_*.csv`); `serie`                 
+      335 +   con un código inexistente, que devolvió el error esperado. 
+      336 +4. **ENAHO con las Skills.** Invocó `graficando-enaho` (área y
+          + departamento) y `mapeando-enaho` con la                      
+      337 +   herramienta `Skill`. `limpiando-enaho` no hizo falta porque
+          + la base limpia ya existía y estaba validada.                 
+      338 +5. **Informe.** Escribió `informes/informe_final.md` con halla
+          +zgos, gráficos del BCRP y de la ENAHO, el mapa,               
+      339 +   limitaciones y reproducibilidad, y `informes/verificacion.m
+          +d` con cuatro afirmaciones para verificar en                  
+      340 +   fuentes oficiales (completada a mano; capturas en `evidenci
+          +as_ia/integracion/`).                                         
+      341 +6. **Contraste.** `scripts/contraste_informe.py` recalcula cad
+          +a cifra del informe desde `salidas/` y la deja                
+      342 +   en `salidas/contraste_informe.txt`.                        
+      343 +                                                              
+      344 +Para repetirlo sin Claude Code, los comandos de la sección 8 p
+          +roducen los mismos archivos.                                  
+      345 +                                                              
+      346 +## 12. Evidencias de uso de IA (`evidencias_ia/`)             
+      347 +                                                              
+      348 +Exportaciones de texto completas de las conversaciones con Cla
+          +ude Code, numeradas en orden cronológico dentro               
+      349 +de cada subcarpeta, más capturas de las verificaciones manuale
+          +s. No contienen claves, tokens ni contraseñas.                
+      350 +                                                              
+      351 +| Subcarpeta | Contenido |                                    
+      352 +|---|---|                                                     
+      353 +| [`mcp/`](evidencias_ia/mcp) | `01_desarrollo_parte1.txt`: de
+          +sarrollo del servidor MCP, parseo de fechas, herramienta `corr
+          +elacion` y pruebas. `02_prueba_integracion_parte1.txt`: prueba
+          + del MCP desde Claude Code con una pregunta de inflación. |   
+      354 +| [`skills/`](evidencias_ia/skills) | `01_desarrollo_parte2.tx
+          +t`: desarrollo de las tres Skills, validación y correcciones. 
+          +`02_prueba_skills_parte2.txt`: ejecución de cada Skill con `/l
+          +impiando-enaho`, etc. `03_prueba_coordinacion_parte2.txt`: un 
+          +pedido en lenguaje natural que activa dos Skills seguidas. |  
+      355 +| [`integracion/`](evidencias_ia/integracion) | `01_preparacio
+          +n_parte3.txt`: se agrega `graficar_serie` al MCP. `02_ejecucio
+          +n_agente.txt`: ejecución completa del agente con MCP y Skills 
+          +que genera el informe (sección 11). Capturas `BCRP_*.png` e `I
+          +NEI_*.png`: verificación manual de las afirmaciones de `inform
+          +es/verificacion.md` en las fuentes oficiales. |               
+      356 +| [`evaluacion/`](evidencias_ia/evaluacion) | `01_evaluacion_p
+          +arte4.txt`: diseño de las preguntas, regla de calificación, co
+          +rrida de los modos A y B, análisis B2 y documentación. Captura
+          +s `verificacion_bcrp_*.png`: verificación de respuestas espera
+          +das en BCRPData. |                                            
+      357 +                                                              
+      358 +Los registros crudos de cada sesión de la evaluación (stream-j
+          +son con herramientas y tiempos) están en                      
+      359 +`evaluacion/registros/` y `evaluacion/registros_b2/`.         
+      360 +                                                              
+      361  ## Estructura
+      362  
+      363  ```
+      220 -mcp/server.py         servidor MCP (5 herramientas, recurso y 
+          -prompt)                                                       
+      221 -mcp/test_server.py    8 pruebas originales (no se modifican)  
+      222 -mcp/test_propia.py    2 pruebas de la herramienta correlacion 
+      223 -.claude/skills/       limpiando-enaho, graficando-enaho y mape
+          -ando-enaho (Parte 2)                                          
+      224 -scripts/              actualizar_readme.py (cifras de la Parte
+          - 2 en el README)                                              
+      225 -salidas/              pruebas del MCP, validación, indicadores
+          - y comparación del mapa                                       
+      226 -figuras/ mapas/       gráficos y mapa de la ENAHO 2024; gráfic
+          -os del BCRP (bcrp_<codigo>.png)                               
+      227 -integracion/ evaluacion/ evidencias_ia/   partes 3–4 y evidenc
+          -ias                                                           
+      364 +mcp/                  server.py (5 herramientas, recurso y pro
+          +mpt) y pruebas                                                
+      365 +.claude/skills/       limpiando-enaho, graficando-enaho y mape
+          +ando-enaho                                                    
+      366 +scripts/              cifras, README, ENTREGA, pruebas y contr
+          +aste del informe                                              
+      367 +salidas/              pruebas del MCP, validación, indicadores
+          +, datos de gráficos, series del BCRP                          
+      368 +figuras/ mapas/       gráficos de la ENAHO y del BCRP; mapa po
+          +r departamento                                                
+      369 +informes/             informe final y verificación manual     
+      370 +evaluacion/           preguntas, ejecutor, calificador, regist
+          +ros y resultados                                              
+      371 +evidencias_ia/        conversaciones con la IA y capturas de v
+          +erificación                                                   
+      372 +ENTREGA.md            comentario de entrega para el Issue (gen
+          +erado)                                                        
+      373  ```
+
+● Verifico algunas afirmaciones del README antes de generar los bloques.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Todo cuadra. Genero los bloques de cifras del README.
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && uv run python
+      scripts/actualizar_readme.py && sed -n
+      '/pruebas:inicio/,/pruebas:fin/p;/evaluacion:inici…)
+  ⎿  README.md actualizado: bloques pruebas, validacion, evaluacion
+     <!-- pruebas:inicio -->
+     <!-- Generado por scripts/actualizar_readme.py; no editar a mano. -->
+     … +22 lines (ctrl+o to expand)
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+● Commit del README y los scripts de cifras.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ahora el generador de ENTREGA.md, con el formato exacto del Issue y una tabla
+  de origen de cada cifra.
+
+● Write(scripts\generar_entrega.py)
+  ⎿  Wrote 110 lines to scripts\generar_entrega.py
+       1 """Genera ENTREGA.md: el comentario de entrega para el Issue 201
+         , con el formato del enunciado.
+       2 
+       3 Cada cifra se lee de su archivo (scripts/cifras.py); debajo del 
+         comentario va una tabla con el
+       4 archivo y la línea de donde salió cada valor. El nombre completo
+          se deja para completarlo a mano.
+       5 
+       6 Uso (desde la raíz del proyecto):
+       7     uv run python scripts/generar_entrega.py
+     … +103 lines (ctrl+o to expand)
+
+● Bash(cd "C:/Users/LENOVO/Documents/GitHub/Tareas/Tarea_4_" && uv run python
+      scripts/generar_entrega.py)
+  ⎿  # Entrega – Tarea 4
+
+     <!-- Generado por scripts/generar_entrega.py; no editar las cifras a m
+     … +49 lines (ctrl+o to expand)
+  ⎿  Created ENTREGA.md (+52 -0)
+       1 +# Entrega – Tarea 4                                            
+       2 +                                                               
+       3 +<!-- Generado por scripts/generar_entrega.py; no editar las cif
+         +ras a mano. -->                                                
+       4 +                                                               
+       5 +Antes de publicar: reemplazar **Nombre completo**. Copiar en el
+         + Issue                                                         
+       6 +<https://github.com/d2cml-ai/Data-Science-Python/issues/201> el
+         + texto entre las dos líneas.                                   
+       7 +                                                               
+       8 +---                                                            
+       9 +                                                               
+      10 +### Tarea 4 – Individual                                       
+      11 +                                                               
+      12 +**Estudiante:** Nombre completo (@estefmej)                    
+      13 +                                                               
+      14 +**Pregunta de investigación:** ¿Cómo evolucionaron la inflación
+         +, el tipo de cambio y la actividad económica del Perú entre 202
+         +0 y 2024, y qué diferencias por área y departamento presentaba 
+         +la pobreza monetaria en 2024?                                  
+      15 +                                                               
+      16 +**Repositorio de GitHub:** https://github.com/estefmej/Tarea_4_
+      17 +                                                               
+      18 +**Informe final:** https://github.com/estefmej/Tarea_4_/blob/ma
+         +in/informes/informe_final.md                                   
+      19 +                                                               
+      20 +**Pruebas MCP:** 10/10 aprobadas                               
+      21 +                                                               
+      22 +**Validación ENAHO:**                                          
+      23 +- Pobreza nacional 2024: 27.6 %                                
+      24 +- Residentes habituales: 108,664                               
+      25 +- Unidades territoriales procesadas: 25/25                     
+      26 +                                                               
+      27 +**Evaluación del agente:**                                     
+      28 +- Sin MCP/Skills: 3/10 respuestas correctas                    
+      29 +- Con MCP/Skills: 8/10 respuestas correctas                    
+      30 +- Resultados completos: https://github.com/estefmej/Tarea_4_/bl
+         +ob/main/evaluacion/resultados.csv                              
+      31 +                                                               
+      32 +**Evidencia de integración MCP + Skills:** https://github.com/e
+         +stefmej/Tarea_4_/blob/main/evidencias_ia/integracion/02_ejecuci
+         +on_agente.txt                                                  
+      33 +                                                               
+      34 +**Evidencias de uso de IA:** https://github.com/estefmej/Tarea_
+         +4_/tree/main/evidencias_ia                                     
+      35 +                                                               
+      36 +---                                                            
+      37 +                                                               
+      38 +## Origen de cada cifra (no copiar en el Issue)                
+      39 +                                                               
+      40 +| Campo | Valor | Archivo | Línea o criterio |                 
+     … 12 more lines (ctrl+o to expand)
+
+● Commit final de ENTREGA.md.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Terminé las cinco tareas. Hay 3 commits nuevos en main y no hice push. Antes
+  de publicar en el Issue solo falta que pongas tu Nombre completo en
+  ENTREGA.md. El plazo vence hoy, 8 de noviembre de 2026, a las 11:59 p. m.
+  (hora de Perú), y los enlaces solo funcionarán después del push.
+
+  1. README. Lo reorganicé en las 12 secciones que pide el enunciado:
+  - Incluye el diagrama Mermaid (Claude Code → MCP bcrp y Skills → salidas,
+    figuras, mapas, informe), las 5 herramientas, las 3 Skills, las fuentes con
+    sus enlaces, la instalación con uv y la conexión del MCP.
+  - También los comandos para reproducir todo, la evaluación (A vs. B y B2), las
+    limitaciones (con la baja activación de Skills en claude -p), el ejemplo de
+    ejecución completa y qué contiene cada subcarpeta de evidencias_ia/.
+  - Las cifras salen de tres bloques que genera scripts/actualizar_readme.py,
+    leídos de salidas/ y evaluacion/. El texto que no está en esos bloques no
+    tiene resultados escritos a mano.
+  - No pude ver cómo queda el diagrama Mermaid en GitHub; conviene revisarlo
+    después del push.
+
+  2. Reproducibilidad. pytest da 10 passed y la Skill de limpieza valida 12 de
+  12. Sus archivos de salida quedaron idénticos a los que ya estaban
+  versionados. Agregué scripts/guardar_pruebas.py, que guarda
+  salidas/pruebas_mcp.txt reemplazando la ruta de tu PC por <proyecto>.
+
+  3. Seguridad.
+  - No hay claves, tokens ni correos versionados.
+  - Nunca se subió un .zip, .parquet o .dta, ni ahora ni en el historial. Todo
+    el repositorio pesa unos 4,3 MB.
+  - El .gitignore excluye datos/, los parquet, .venv y settings.local.json.
+  - Algo para que decidas: los registros de evaluacion/registros*/ y algunos
+    .txt de evidencias_ia/ muestran la ruta C:\Users\LENOVO\.... Es el nombre
+    genérico del equipo y no tu nombre, así que no lo cambié para no tocar los
+    registros originales. Si prefieres ocultarlo, puedo reemplazarlo por
+    <usuario>.
+
+  4. ENTREGA.md. Lo genera scripts/generar_entrega.py. El archivo incluye esta
+  misma tabla de origen al final:
+
+  ┌───────────────────┬─────────┬───────────────────────────────────────────┐
+  │       Campo       │  Valor  │                  Origen                   │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Pruebas MCP       │ 10/10   │ salidas/pruebas_mcp.txt, línea final «10  │
+  │                   │         │ passed»                                   │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Pobreza nacional  │ 27.6 %  │ salidas/validacion.txt, línea de pobreza  │
+  │ 2024              │         │ nacional por hogares (27.58 %)            │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Residentes        │ 108,664 │ salidas/validacion.txt, línea «Residentes │
+  │ habituales        │         │  habituales»                              │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Unidades          │ 25/25   │ salidas/validacion.txt, línea «25 códigos │
+  │ territoriales     │         │  de departamento»                         │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Sin MCP/Skills    │ 3/10    │ evaluacion/resultados.csv, modo A con     │
+  │                   │         │ correcta = sí                             │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Con MCP/Skills    │ 8/10    │ evaluacion/resultados.csv, modo B con     │
+  │                   │         │ correcta = sí                             │
+  ├───────────────────┼─────────┼───────────────────────────────────────────┤
+  │ Pregunta de       │ texto   │ informes/informe_final.md, sección 1      │
+  │ investigación     │         │                                           │
+  └───────────────────┴─────────┴───────────────────────────────────────────┘
+
+  Para la pobreza usé la cifra calculada por hogares, que es el método del INEI
+  y del informe. Calculada por personas sería 27.53 %, que redondea a 27.5 %.
+
+  5. Commits. 0b22ec1 (pruebas), c9d3785 (README) y 95a219b (ENTREGA).
+
+✻ Cogitated for 5m 48s · done 8:06 p.m.
