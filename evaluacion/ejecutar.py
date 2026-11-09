@@ -13,6 +13,11 @@ metadatos de la corrida (comando, carpeta, tiempo) en <modo>_<id>.meta.json.
 Uso:
     uv run evaluacion/ejecutar.py --modos A B --ids B1      # piloto
     uv run evaluacion/ejecutar.py --modos A B               # las 20 corridas
+
+Modo B2 (análisis complementario, añadido después de la corrida oficial): igual
+que B, pero con evaluacion/permisos_modo_b2.json, que además bloquea los archivos
+con cifras ENAHO ya calculadas. Registros aparte en evaluacion/registros_b2/.
+    uv run evaluacion/ejecutar.py --modos B2 --ids E1 E2 E3 E4 C1 C2
 """
 
 import argparse
@@ -27,6 +32,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 EVAL = RAIZ / "evaluacion"
 REGISTROS = EVAL / "registros"
+REGISTROS_B2 = EVAL / "registros_b2"
 CARPETA_A = Path(os.environ["TEMP"]) / "tarea4_evaluacion_modoA"
 
 MODELO = "sonnet"
@@ -60,16 +66,17 @@ def comando(modo: str) -> tuple[list[str], Path]:
             raise SystemExit(f"La carpeta del Modo A no está vacía: {CARPETA_A}")
         # Sin --mcp-config: con --strict-mcp-config no se carga ningún servidor MCP.
         return [claude, *COMUNES, "--disallowedTools", *BLOQUEO_A], CARPETA_A
+    permisos = "evaluacion/permisos_modo_b2.json" if modo == "B2" else "evaluacion/permisos_modo_b.json"
     return [claude, *COMUNES,
             "--mcp-config", ".mcp.json",
-            "--settings", "evaluacion/permisos_modo_b.json",
+            "--settings", permisos,
             "--disallowedTools", *BLOQUEO_B], RAIZ
 
 
 def correr(modo: str, fila: dict) -> None:
     cmd, cwd = comando(modo)
     prompt = f"{fila['pregunta']}\n\n{INSTRUCCION}"
-    base = REGISTROS / f"{modo}_{fila['id']}"
+    base = (REGISTROS_B2 if modo == "B2" else REGISTROS) / f"{modo}_{fila['id']}"
     inicio = time.time()
     error = ""
     try:
@@ -96,7 +103,7 @@ def correr(modo: str, fila: dict) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--modos", nargs="+", default=["A", "B"], choices=["A", "B"])
+    ap.add_argument("--modos", nargs="+", default=["A", "B"], choices=["A", "B", "B2"])
     ap.add_argument("--ids", nargs="*", help="ids de preguntas (por defecto todas)")
     args = ap.parse_args()
 
@@ -105,6 +112,7 @@ def main() -> None:
     if args.ids:
         preguntas = [p for p in preguntas if p["id"] in args.ids]
     REGISTROS.mkdir(exist_ok=True)
+    REGISTROS_B2.mkdir(exist_ok=True)
     for fila in preguntas:
         for modo in args.modos:
             correr(modo, fila)

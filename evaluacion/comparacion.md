@@ -233,3 +233,113 @@ Mejoraron 5 preguntas (B3, B4, E2, E3, E4); ninguna empeoró.
   pero agregaron etiquetas o cuentas con números. Una instrucción más estricta («solo los valores, separados
   por punto y coma») reduciría ese ruido en futuras corridas.
 - **Ningún modo afirmó causalidad** entre inflación y pobreza.
+
+## 7. Análisis complementario: Modo B2
+
+> **Se añadió después de la corrida oficial.** No reemplaza ni modifica el
+> resultado oficial del experimento, que sigue siendo **A (3/10) frente a
+> B (8/10)**. Las respuestas esperadas y la regla de calificación son las
+> mismas; no se cambiaron.
+
+### 7.1 Por qué
+
+En la corrida oficial, el Modo B acertó las 4 preguntas de la ENAHO sin
+invocar ninguna Skill: leyó cifras ya calculadas en el repositorio (sección
+5.4). El Modo B2 busca responder si, **cuando las cifras solo pueden salir de
+ejecutar las Skills**, el modelo las activa y acierta.
+
+### 7.2 Diseño
+
+- Preguntas: las 4 de la ENAHO (E1-E4) y las 2 combinadas (C1, C2).
+- Misma configuración e instrucciones que el Modo B (`ejecutar.py --modos B2`),
+  con `evaluacion/permisos_modo_b2.json` en lugar de `permisos_modo_b.json`.
+- Registros aparte en `evaluacion/registros_b2/`; calificación con la misma
+  regla (`calificar.py --b2`) en `evaluacion/resultados_b2.csv`.
+- Antes de la corrida se borraron `salidas/personas_2024.parquet` y
+  `salidas/hogares_2024.parquet`, una sola vez (no entre preguntas). Solo C2,
+  la última en ejecutarse, los regeneró, así que ninguna sesión aprovechó el
+  trabajo de otra.
+
+**Bloqueos adicionales** (`Read` y `Grep`, además de los del Modo B):
+
+| Pedido | Agregado al revisar el repo (contienen las mismas cifras) |
+|---|---|
+| `README.md` | `datos/pobreza_departamento_2024.csv` (lo leyó B en E4) |
+| `**/reference.md` | `salidas/contraste_informe.txt` |
+| `salidas/indicadores.csv` | `figuras/pobreza_*` y `mapas/**` (gráficos con las cifras) |
+| `salidas/validacion.txt` | `.claude/skills/*/scripts/**` (`limpiar.py` trae las cifras de referencia; se puede **ejecutar**, no leer) |
+| `salidas/grafico_*` | |
+| `salidas/comparacion_mapa.csv` | |
+
+**Comandos Bash de lectura:** como `dontAsk` aprueba solos los comandos de
+solo lectura, se denegaron `cat`, `head`, `tail`, `grep`, `rg`, `find`, `git`,
+`awk`, `sed`, `less`, `more`, `strings`, `od` y `xxd`. Esto también impide un
+`grep -r` sobre la raíz, que no nombra ningún archivo bloqueado.
+
+**Verificación previa (prueba adversarial).** Fueron denegados `Read` de
+`README.md`, `reference.md`, `datos/pobreza_departamento_2024.csv`,
+`salidas/grafico_por_area_2024.csv`, `salidas/indicadores.csv`,
+`figuras/pobreza_area_2024.png` y `limpiar.py`; `grep -ri cajamarca .`,
+`git show HEAD:README.md` y `uv run python -c "print(open('README.md')…)"`
+por Bash. Fueron permitidos `Read` de `limpiando-enaho/SKILL.md` y `ls salidas`.
+
+**Filtración residual conocida.** `Grep` sobre la raíz encuentra en
+`.claude/skills/mapeando-enaho/SKILL.md` un ejemplo de título
+(«Cajamarca 45.0 %»). No se bloqueó porque la Skill necesita ese archivo. En
+los registros, ninguna sesión llegó a ver esa línea.
+
+### 7.3 Resultados
+
+| id | Esperada | Modo B (oficial) | Modo B2 | Cómo respondió B2 |
+|---|---|---|---|---|
+| E1 | 27,6 | 27,6 ✔ | 27,6 ✔ | memoria, sin herramientas |
+| E2 | 39,3 | 39,3 ✔ | 39,6 ✘ | memoria, sin herramientas |
+| E3 | 24,8 | 24,8 ✔ | ≈26 ✘ | buscó en el repo, no halló nada y respondió de memoria |
+| E4 | Cajamarca; 45,0 | Cajamarca, 45,0 ✔ | no responde ✘ | concluyó que faltaban los datos y no ejecutó la Skill |
+| C1 | 1,97; 27,6 | ✘ ambigua | ✘ ambigua | MCP para la inflación; pobreza de memoria |
+| C2 | 8,81; 14,5 | ✘ ambigua | ✘ ambigua | MCP para la inflación; **ejecutó `limpiar.py`** para la brecha |
+
+| | Modo B (mismas 6 preguntas) | Modo B2 |
+|---|---|---|
+| Correctas | 4 / 6 | **1 / 6** |
+| Tiempo promedio (`duration_ms`) | 10,8 s | 13,9 s |
+| Afirmaciones causales | 0 | 0 |
+
+En B2, C1 y C2 tenían las dos cifras dentro de tolerancia, pero la línea
+incluía números de más («(12 meses)», «≈2,0 %», «39,3 % − 24,8 %»). Por eso
+son incorrectas por ambigüedad, igual que en la corrida oficial.
+
+### 7.4 ¿Se activaron las Skills?
+
+- **La herramienta `Skill` no se invocó en ninguna de las 6 sesiones**, igual
+  que en la corrida oficial.
+- **Solo en C2 se ejecutó el flujo de una Skill, y fue a mano.** El modelo
+  leyó `limpiando-enaho/SKILL.md` y corrió `uv run python
+  .claude/skills/limpiando-enaho/scripts/limpiar.py --anio 2024` con Bash.
+  Las 12 verificaciones del script salieron APROBADAS. Tomó las cifras rural
+  (39,30 %) y urbana (24,81 %) de la salida del script y calculó la brecha de
+  14,5 pp. Es la única cifra de la ENAHO obtenida de los microdatos en todo
+  el experimento.
+- **En las otras 5 preguntas el modelo no intentó ejecutar la Skill.** Hizo
+  búsquedas con `Grep`/`Glob` y, al no encontrar resultados (los archivos
+  bloqueados no aparecen en los listados), respondió de memoria (E1, E2, E3,
+  C1) o declaró que faltaban datos (E4). En E4 llegó a decir que necesitaba
+  descargar los microdatos, aunque los zip estaban en `datos/`.
+- Los archivos que regeneró `limpiar.py` en C2 quedaron idénticos a los
+  versionados en git.
+
+### 7.5 Lectura
+
+- **Sin cifras ya calculadas a mano, el Modo B pierde casi toda su ventaja en
+  la ENAHO** (de 4/6 a 1/6) y vuelve a comportarse como el Modo A: memoria
+  con errores (E2, E3) o abstención (E4).
+- **Las Skills funcionan cuando se ejecutan** (C2 obtuvo las cifras exactas
+  y validadas), **pero el modelo casi nunca decide ejecutarlas** ante una
+  pregunta factual. Prefiere la memoria o buscar archivos. Con `claude -p` y
+  `sonnet`, que una Skill exista no basta para que se use.
+- Para que sean útiles en este tipo de preguntas habría que hacerlas más
+  fáciles de activar. Por ejemplo, que la descripción de `limpiando-enaho`
+  diga explícitamente «úsala para responder cualquier cifra de pobreza de la
+  ENAHO 2024», o que la instrucción del usuario lo pida.
+- Este análisis tiene solo 6 preguntas y una corrida, así que es indicativo,
+  no concluyente.

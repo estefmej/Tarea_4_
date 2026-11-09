@@ -1,0 +1,65 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__bcrp",
+      "Skill",
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(uv run python *skills*scripts*)"
+    ],
+    "deny": [
+      "WebSearch",
+      "WebFetch",
+      "Read(./evaluacion/**)",
+      "Read(./informes/**)",
+      "Read(./evidencias_ia/**)",
+      "Read(./salidas/bcrp_*)",
+      "Glob(./evaluacion/**)",
+      "Glob(./informes/**)",
+      "Glob(./evidencias_ia/**)",
+      "Glob(./salidas/bcrp_*)",
+      "Grep(./evaluacion/**)",
+      "Grep(./informes/**)",
+      "Grep(./evidencias_ia/**)",
+      "Grep(./salidas/bcrp_*)",
+
+      "Read(./README.md)",
+      "Read(**/reference.md)",
+      "Read(./salidas/indicadores.csv)",
+      "Read(./salidas/validacion.txt)",
+      "Read(./salidas/grafico_*)",
+      "Read(./salidas/comparacion_mapa.csv)",
+      "Grep(./README.md)",
+      "Grep(**/reference.md)",
+      "Grep(./salidas/indicadores.csv)",
+      "Grep(./salidas/validacion.txt)",
+      "Grep(./salidas/grafico_*)",
+      "Grep(./salidas/comparacion_mapa.csv)",
+
+      "Read(./datos/pobreza_departamento_2024.csv)",
+      "Read(./salidas/contraste_informe.txt)",
+      "Read(./figuras/pobreza_*)",
+      "Read(./mapas/**)",
+      "Read(./.claude/skills/*/scripts/**)",
+      "Grep(./datos/pobreza_departamento_2024.csv)",
+      "Grep(./salidas/contraste_informe.txt)",
+      "Grep(./.claude/skills/*/scripts/**)",
+
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(git *)",
+      "Bash(awk *)",
+      "Bash(sed *)",
+      "Bash(less *)",
+      "Bash(more *)",
+      "Bash(strings *)",
+      "Bash(od *)",
+      "Bash(xxd *)"
+    ]
+  }
+}

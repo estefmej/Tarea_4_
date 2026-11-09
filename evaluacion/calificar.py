@@ -19,9 +19,11 @@ evaluacion/comparacion.md, sección «Regla de calificación»):
 5. Combinadas: además, el texto completo no debe afirmar causalidad (lista
    de expresiones causales; no cuenta si va precedida de una negación).
 
-Uso:  uv run evaluacion/calificar.py
+Uso:  uv run evaluacion/calificar.py                     # corrida oficial (A y B)
+      uv run evaluacion/calificar.py --b2                # complementaria (B2)
 """
 
+import argparse
 import csv
 import json
 import re
@@ -176,12 +178,19 @@ def calificar(fila: dict, linea: str, texto: str) -> tuple[bool, list[str]]:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--b2", action="store_true", help="califica la corrida complementaria B2")
+    args = ap.parse_args()
+    modos = ("B2",) if args.b2 else ("A", "B")
+    registros = EVAL / "registros_b2" if args.b2 else REGISTROS
+    salida = EVAL / ("resultados_b2.csv" if args.b2 else "resultados.csv")
+
     with open(EVAL / "preguntas.csv", encoding="utf-8") as f:
         preguntas = list(csv.DictReader(f))
     filas = []
-    for modo in ("A", "B"):
+    for modo in modos:
         for p in preguntas:
-            ruta = REGISTROS / f"{modo}_{p['id']}.jsonl"
+            ruta = registros / f"{modo}_{p['id']}.jsonl"
             if not ruta.exists():
                 continue
             info = leer_registro(ruta)
@@ -206,11 +215,11 @@ def main() -> None:
                 "tiempo_segundos": info["tiempo"] if info["tiempo"] is not None else meta.get("tiempo_reloj_s"),
                 "errores": " | ".join(motivos + info["errores"]),
             })
-    with open(EVAL / "resultados.csv", "w", encoding="utf-8", newline="") as f:
+    with open(salida, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(filas[0]))
         w.writeheader()
         w.writerows(filas)
-    for modo in ("A", "B"):
+    for modo in modos:
         sub = [f for f in filas if f["modo"] == modo]
         ok = sum(f["correcta"] == "sí" for f in sub)
         print(f"Modo {modo}: {ok}/{len(sub)} correctas")
