@@ -1,7 +1,7 @@
-"""Lee las cifras de entrega desde los archivos del repositorio.
+"""Lee las cifras del README desde los archivos del repositorio.
 
-Lo usan scripts/actualizar_readme.py y scripts/generar_entrega.py, para que ninguna cifra del
-README ni de ENTREGA.md se escriba a mano. Cada función devuelve el valor y el archivo y la línea
+Lo usa scripts/actualizar_readme.py, para que ninguna cifra del
+README se escriba a mano. Cada función devuelve el valor y el archivo y la línea
 de donde salió, para poder mostrar el origen.
 
 Si un archivo no tiene el formato esperado, se detiene con un error en vez de inventar un valor.

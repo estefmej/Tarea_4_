@@ -277,7 +277,6 @@ uv run evaluacion/calificar.py --b2           # evaluacion/resultados_b2.csv
 
 # Documentación generada desde los archivos
 uv run python scripts/actualizar_readme.py    # bloques de cifras de este README
-uv run python scripts/generar_entrega.py      # ENTREGA.md (comentario para el Issue)
 ```
 
 Dentro de Claude Code, las Skills se invocan con `/limpiando-enaho`, `/graficando-enaho todos` y
@@ -419,11 +418,10 @@ Los registros crudos de cada sesión de la evaluación (stream-json con herramie
 ```
 mcp/                  server.py (5 herramientas, recurso y prompt) y pruebas
 .claude/skills/       limpiando-enaho, graficando-enaho y mapeando-enaho
-scripts/              cifras, README, ENTREGA, pruebas y contraste del informe
+scripts/              cifras del README, pruebas y contraste del informe
 salidas/              pruebas del MCP, validación, indicadores, datos de gráficos, series del BCRP
 figuras/ mapas/       gráficos de la ENAHO y del BCRP; mapa por departamento
 informes/             informe final y verificación manual
 evaluacion/           preguntas, ejecutor, calificador, registros y resultados
 evidencias_ia/        conversaciones con la IA y capturas de verificación
-ENTREGA.md            comentario de entrega para el Issue (generado)
 ```
