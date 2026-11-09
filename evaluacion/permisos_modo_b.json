@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__bcrp",
+      "Skill",
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(uv run python *skills*scripts*)"
+    ],
+    "deny": [
+      "WebSearch",
+      "WebFetch",
+      "Read(./evaluacion/**)",
+      "Read(./informes/**)",
+      "Read(./evidencias_ia/**)",
+      "Read(./salidas/bcrp_*)",
+      "Glob(./evaluacion/**)",
+      "Glob(./informes/**)",
+      "Glob(./evidencias_ia/**)",
+      "Glob(./salidas/bcrp_*)",
+      "Grep(./evaluacion/**)",
+      "Grep(./informes/**)",
+      "Grep(./evidencias_ia/**)",
+      "Grep(./salidas/bcrp_*)"
+    ]
+  }
+}
