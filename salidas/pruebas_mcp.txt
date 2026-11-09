@@ -18,4 +18,4 @@ mcp/test_server.py::test_codigo_inexistente_da_un_error_claro PASSED     [ 80%]
 mcp/test_server.py::test_un_recurso PASSED                               [ 90%]
 mcp/test_server.py::test_un_prompt PASSED                                [100%]
 
-============================= 10 passed in 27.30s =============================
+============================= 10 passed in 4.21s ==============================
