@@ -1,0 +1,1231 @@
+ ▐▛███▛█   Claude Code v2.1.319
+▝▜██████▀  Opus 5.5 · Claude Pro
+ ▝▝   ▝▝   ~\Documents\GitHub\Tareas\Tarea_4_
+
+
+❯ Tarea 4 – Parte 4: Evaluación, documentación y reproducibilidad               
+                                                                                
+  Responde siempre en español. Entorno: Windows con PowerShell.                 
+  Primero explícame el plan en 5-8 pasos sencillos y espera mi OK.              
+                                                                                
+  1. Preguntas y respuestas esperadas (antes de ejecutar nada)                  
+                                                                                
+  Crea evaluacion/preguntas.csv con columnas: id, tipo (bcrp/enaho/combinada),  
+  pregunta, respuesta_esperada, tolerancia, fuente_de_verificacion. 10          
+  preguntas:                                                                    
+  - BCRP (4): inflación Lima 12 meses en dic-2024 (PN01273PM); máximo de esa    
+    inflación en 2020-2024 y su mes; variación interanual del PBI en abr-2020   
+    (PN01728AM); tipo de cambio promedio venta en dic-2024 (PN01206PM).         
+    Calcula las respuestas esperadas con un script independiente                
+    evaluacion/esperadas_bcrp.py que consulte la API pública del BCRP           
+    directamente (sin importar ni usar mcp/server.py).                          
+  - ENAHO (4), con las cifras oficiales del informe técnico del INEI «Perú:     
+    Evolución de la Pobreza Monetaria 2015-2024»: pobreza nacional 27,6 %;      
+    pobreza rural 39,3 %; pobreza urbana 24,8 %; departamento con mayor         
+    pobreza: Cajamarca, 45,0 %.                                                 
+  - Combinadas (2): (a) inflación Lima dic-2024 y pobreza nacional 2024;        
+    (b) máximo de inflación 2020-2024 y brecha de pobreza rural-urbana 2024 en  
+    puntos porcentuales (14,5). En estas, la respuesta es correcta si ambas     
+    cifras están dentro de tolerancia y no se afirma causalidad.                
+    Tolerancias definidas ahora: ±0,05 pp para tasas del BCRP, ±0,01 para tipo  
+    de cambio, ±0,1 pp para pobreza; nombres de mes o departamento exactos.     
+    Haz commit de preguntas.csv y del script ANTES de ejecutar el experimento:  
+    test(evaluacion): preguntas y respuestas esperadas fijadas.                 
+                                                                                
+  2. Experimento                                                                
+                                                                                
+  Crea evaluacion/ejecutar.ps1 (o .py) que corra cada pregunta en una sesión    
+  independiente con claude -p, mismo modelo en ambos modos (--model sonnet),    
+  mismas instrucciones, y guarde la salida completa (stream-json con las        
+  herramientas usadas y el tiempo) en evaluacion/registros/:                    
+  - Modo A: ejecutar desde una carpeta vacía fuera del repo (en $env:TEMP),     
+    sin el MCP bcrp (--strict-mcp-config sin config), sin Skills                
+    (--disallowedTools Skill) y sin WebSearch ni WebFetch.                      
+  - Modo B: desde la raíz del repo, con el MCP bcrp y las Skills, también sin   
+    WebSearch ni WebFetch, con permisos solo para las herramientas necesarias.  
+    Verifica las opciones exactas con claude --help antes de usarlas. Prueba    
+    primero con 1 pregunta por modo, muéstrame el resultado y espera mi OK      
+  antes                                                                         
+    de correr las 20.                                                           
+                                                                                
+  3. Resultados y comparación                                                   
+                                                                                
+  - evaluacion/resultados.csv: modo, id, pregunta, respuesta_esperada,          
+    respuesta_generada, fuente_usada, herramientas_usadas, correcta (sí/no      
+    según la tolerancia), tiempo_segundos, errores. La corrección la decide un  
+    script, no tú a ojo; en las combinadas revisa también la frase causal.      
+  - evaluacion/comparacion.md: correctas por modo, incorrectas o sin            
+    respuesta, tiempo promedio, preguntas que mejoraron o empeoraron,           
+    principales errores, qué otras herramientas estaban habilitadas en cada     
+    modo, y conclusión sobre la utilidad de MCP y Skills.                       
+    No modifiques las respuestas esperadas después de ver resultados.           
+                                                                                
+  Reglas                                                                        
+                                                                                
+  Commits descriptivos (sin push), sin datos, cachés ni claves. Al final,       
+  recuérdame exportar a evidencias_ia/evaluacion/.                              
+
+● Voy a revisar rápido la estructura del repo para que el plan sea concreto.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● El repo tiene lo necesario: el MCP bcrp en .mcp.json, las 3 Skills de ENAHO en
+  .claude/skills/ y una carpeta evaluacion/ vacía. Claude Code está en la
+  versión 2.1.319. Este es el plan:
+
+  Plan (Parte 4)
+
+  1. Verificar las opciones de la CLI. Revisar claude --help para confirmar cómo
+     se escriben -p, --model, --output-format stream-json (y si exige
+     --verbose), --strict-mcp-config, --mcp-config, --allowedTools,
+     --disallowedTools y --permission-mode. Te muestro las que voy a usar.
+  2. Script de respuestas esperadas. Crear evaluacion/esperadas_bcrp.py, que
+     consulta la API pública del BCRP con urllib o requests sin tocar
+     mcp/server.py. Calcula estas 4 cifras:
+     - inflación de Lima en dic-2024;
+     - inflación máxima de 2020-2024 y el mes en que ocurrió;
+     - variación del PBI en abr-2020;
+     - tipo de cambio de dic-2024.
+
+     Lo corro una vez para obtener los valores.
+  3. Archivo de preguntas. Crear evaluacion/preguntas.csv con las 10 preguntas:
+     4 del BCRP, 4 de la ENAHO con las cifras del INEI que me diste, y 2
+     combinadas. Lleva las tolerancias fijadas desde ahora. Después hago el
+     commit test(evaluacion): preguntas y respuestas esperadas fijadas antes de
+     ejecutar el experimento.
+  4. Script del experimento. Crear evaluacion/ejecutar.ps1. Corre cada pregunta
+     en una sesión nueva de claude -p --model sonnet, con las mismas
+     instrucciones en los dos modos, y guarda el stream-json en
+     evaluacion/registros/{modo}_{id}.jsonl. Los modos son:
+     - Modo A: se ejecuta desde una carpeta vacía en $env:TEMP, sin MCP, sin
+       Skills, sin WebSearch ni WebFetch.
+     - Modo B: se ejecuta desde la raíz del repo, con el MCP bcrp y las Skills,
+       sin WebSearch ni WebFetch, y con permiso solo para las herramientas
+       mcp__bcrp__*, Skill, Read y Bash (solo uv run/python).
+  5. Prueba piloto. Correr 1 pregunta en cada modo, mostrarte el resultado y
+     esperar tu OK antes de lanzar las 20 ejecuciones.
+  6. Corrida completa y calificación. Ejecutar las 20. Luego un script
+     evaluacion/calificar.py lee los registros y genera resultados.csv. Extrae
+     la respuesta, las herramientas usadas, el tiempo y los errores, y decide si
+     cada respuesta es correcta según la tolerancia. En las combinadas también
+     busca frases causales («causó», «debido a», «provocó»…).
+  7. Comparación. Escribir evaluacion/comparacion.md con:
+     - correctas por modo;
+     - incorrectas o sin respuesta;
+     - tiempo promedio;
+     - preguntas que mejoraron o empeoraron;
+     - principales errores;
+     - herramientas habilitadas en cada modo;
+     - conclusión sobre la utilidad del MCP y las Skills.
+  8. Commits finales. Hacer commits descriptivos sin push. Excluyo de git los
+     datos, las cachés y las claves; los registros sí van, salvo que pesen
+     demasiado. Al final te recuerdo exportar a evidencias_ia/evaluacion/.
+
+  Antes de empezar, un detalle: en el Modo A la ENAHO no está disponible, así
+  que se espera que el modelo responda de memoria o diga que no sabe. Eso es
+  justo lo que se quiere medir.
+
+  ¿Me das el OK para empezar con los pasos 1 a 3?
+
+✻ Cogitated for 22s · done 7:21 p.m.
+
+❯ OK, adelante con los pasos 1 a 3, con dos ajustes para el experimento:        
+  1. Agrega a las instrucciones de ambos modos (idénticas): "Termina tu         
+     respuesta con una línea con el formato: RESPUESTA: <valor o valores>".     
+     calificar.py debe leer esa línea; si no existe, márcala como "sin          
+     respuesta".                                                                
+  2. En el Modo A, deshabilita también Bash, Read, Glob y Grep para que no      
+     pueda consultar internet con curl ni leer archivos del repo por su ruta.   
+     Documenta en comparacion.md exactamente qué herramientas quedaron          
+     habilitadas en cada modo.                                                  
+
+● Empiezo con el paso 1: revisar las opciones de la CLI.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmé las opciones -p, --model, --output-format stream-json (con
+  --verbose), --strict-mcp-config, --mcp-config, --tools, --allowedTools,
+  --disallowedTools, --permission-mode dontAsk y --no-session-persistence. Ahora
+  miro las dependencias y el .gitignore.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Escribo un script aparte con urllib contra la API del BCRP, pero antes
+  compruebo si PN01728AM es un índice o ya una variación.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Las tres series traen el valor directo (PN01728AM ya es una variación
+  interanual), así que no hace falta calcular nada a mano. Escribo el script:
+
+● Write(evaluacion\esperadas_bcrp.py)
+  ⎿  Wrote 58 lines to evaluacion\esperadas_bcrp.py
+       1 """Respuestas esperadas de las preguntas BCRP de la evaluación (
+         Parte 4).
+       2 
+       3 Script independiente: consulta directamente la API pública del B
+         CRP con la
+       4 biblioteca estándar. No importa ni usa mcp/server.py, para que l
+         a referencia
+       5 no dependa del sistema que se está evaluando.
+       6 
+       7 Uso:  uv run evaluacion/esperadas_bcrp.py
+     … +51 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La respuesta trae algo extra después del JSON. Reviso el final:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La API agrega una advertencia HTML después del JSON. Uso raw_decode para leer
+  solo el objeto JSON:
+
+● Update(evaluacion\esperadas_bcrp.py)
+  ⎿  Added 3 lines, removed 1 line
+      25      url = API.format(codigo=codigo, ini=ini, fin=fin)
+      26      req = urllib.request.Request(url, headers={"User-Agent": "t
+          area4-evaluacion"})
+      27      with urllib.request.urlopen(req, timeout=60) as resp:
+      28 -        datos = json.loads(resp.read().decode("utf-8"))        
+      28 +        texto = resp.read().decode("utf-8").lstrip()           
+      29 +    # A veces la API agrega un aviso HTML tras el JSON: se lee 
+         +solo el objeto.                                                
+      30 +    datos, _ = json.JSONDecoder().raw_decode(texto)            
+      31      serie = {}
+      32      for p in datos["periods"]:
+      33          valor = p["values"][0]
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Los valores salieron: 1,97 %, 8,81 % en junio de 2022, −39,28 % y 3,737. Estoy
+  creando preguntas.csv con punto decimal y los valores múltiples separados por
+  «;».
+
+● Write(evaluacion\preguntas.csv)
+  ⎿  Wrote 11 lines to evaluacion\preguntas.csv
+      1 id,tipo,pregunta,respuesta_esperada,tolerancia,fuente_de_verifica
+        cion
+      2 B1,bcrp,"¿Cuál fue la inflación de Lima Metropolitana en 12 meses
+         (variación % del IPC) en diciembre de 2024?",1.97,±0.05 pp,"BCRP
+        , serie PN01273PM, dic-2024 (evaluacion/esperadas_bcrp.py)"
+      3 B2,bcrp,"¿Cuál fue el valor máximo de la inflación de Lima Metrop
+        olitana en 12 meses entre enero de 2020 y diciembre de 2024, y en
+         qué mes y año ocurrió?",8.81 ; junio 2022,±0.05 pp ; mes y año e
+        xactos,"BCRP, serie PN01273PM, ene-2020 a dic-2024 (evaluacion/es
+        peradas_bcrp.py)"
+     … +8 lines (ctrl+o to expand)
+
+  Committed b179434 (ctrl+o to expand)
+  ⎿  PostToolUse:PowerShell says: Tip: Run /ultrareview before you push to catch
+     bugs with a cloud-based multi-agent review — 3 free reviews left.
+
+● Terminé los pasos 1 a 3: las preguntas y las respuestas esperadas quedaron
+  fijadas en el commit b179434, antes de ejecutar cualquier parte del
+  experimento.
+
+  Respuestas esperadas del BCRP, calculadas por evaluacion/esperadas_bcrp.py
+  directamente desde la API pública, sin usar mcp/server.py:
+
+  ┌─────┬────────────────────────────┬──────────────────┬───────────────────┐
+  │ id  │          Pregunta          │     Esperada     │    Tolerancia     │
+  ├─────┼────────────────────────────┼──────────────────┼───────────────────┤
+  │ B1  │ Inflación Lima 12 meses,   │ 1,97 %           │ ±0,05 pp          │
+  │     │ dic-2024                   │                  │                   │
+  ├─────┼────────────────────────────┼──────────────────┼───────────────────┤
+  │ B2  │ Inflación máxima 2020-2024 │ 8,81 % en junio  │ ±0,05 pp; mes     │
+  │     │                            │ 2022             │ exacto            │
+  ├─────┼────────────────────────────┼──────────────────┼───────────────────┤
+  │ B3  │ PBI interanual, abr-2020   │ −39,28 %         │ ±0,05 pp          │
+  ├─────┼────────────────────────────┼──────────────────┼───────────────────┤
+  │ B4  │ Tipo de cambio venta,      │ 3,737            │ ±0,01             │
+  │     │ dic-2024                   │                  │                   │
+  └─────┴────────────────────────────┴──────────────────┴───────────────────┘
+
+  Las preguntas de la ENAHO (E1-E4) usan las cifras oficiales del INEI que
+  indicaste. Las combinadas esperan 1,97 y 27,6 (C1), y 8,81 y 14,5 (C2), sin
+  afirmar causalidad.
+
+  Detalles a tener en cuenta:
+  - La API del BCRP agrega un aviso HTML después del JSON, así que el script lee
+    solo el objeto JSON.
+  - PN01728AM ya entrega la variación interanual del PBI, por lo que no hubo que
+    calcularla.
+  - En C2 solo se califican las dos cifras; el mes del máximo ya se evalúa en
+    B2.
+
+  Configuración que usaré en el paso 4, con tus dos ajustes:
+  - En ambos modos:
+    - claude -p --model sonnet --output-format stream-json --verbose 
+      --no-session-persistence --permission-mode dontAsk.
+    - La misma instrucción añadida: «Termina tu respuesta con una línea con el
+      formato: RESPUESTA: <valor o valores>».
+  - Modo A:
+    - Se ejecuta desde una carpeta vacía en $env:TEMP.
+    - Con --strict-mcp-config y sin --mcp-config.
+    - Con --disallowedTools aplicado a Skill, WebSearch, WebFetch, Bash,
+      PowerShell, Read, Glob y Grep.
+  - Modo B:
+    - Se ejecuta desde la raíz del repo, con --strict-mcp-config --mcp-config 
+      .mcp.json, así que solo se carga el MCP bcrp.
+    - Con --allowedTools para mcp__bcrp__*, Skill, Read, Glob, Grep y Bash(uv 
+      run *).
+    - Con --disallowedTools para WebSearch y WebFetch.
+
+  He añadido PowerShell a la lista bloqueada del Modo A porque en Windows
+  también puede descargar páginas de internet. Además, el script registrará la
+  lista real de herramientas que cada sesión informa al iniciar; esa lista irá
+  en comparacion.md.
+
+  ¿Sigo con el paso 4 (escribir ejecutar.ps1) y el paso 5 (prueba piloto con 1
+  pregunta por modo)?
+
+✻ Sautéed for 1m 23s · done 7:24 p.m.
+
+※ recap: Estamos en la Parte 4, que compara respuestas con y sin el MCP y las Skills; ya están fijadas en un commit las 10 preguntas con sus respuestas esperadas. Falta tu OK para escribir ejecutar.ps1 y correr la prueba piloto con una pregunta por modo. (disable recaps in /config)
+
+❯ Sí, sigue con los pasos 4 y 5, con un ajuste en el Modo B: bloquea la         
+  lectura de archivos que contienen respuestas ya calculadas, para que solo     
+  pueda obtenerlas usando el MCP y las Skills. Deniega Read, Glob y Grep sobre  
+  evaluacion/, informes/, evidencias_ia/** y salidas/bcrp_*. Verifica que       
+  la regla funcione en la prueba piloto (que no lea esos archivos) y documenta  
+  esta restricción en comparacion.md.                                           
+
+● Antes de escribir el script reviso qué comandos ejecutan las Skills y qué
+  archivos hay en salidas/. El permiso de Bash del Modo B debe ser lo bastante
+  amplio para que las Skills funcionen, sin abrir una vía para leer los archivos
+  bloqueados.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Las Skills ejecutan uv run python ${CLAUDE_SKILL_DIR}/scripts/.... Ahora
+  reviso tu configuración de usuario de Claude Code, porque sus permisos
+  generales podrían aplicarse al experimento y anular las restricciones.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Tu configuración de usuario solo cambia el tema, así que no añade permisos.
+  Ahora reviso la memoria automática, el CLAUDE.md y la instalación de claude.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● No hay memoria ni CLAUDE.md que filtren respuestas, así que uso Python para el
+  ejecutor porque PowerShell 5.1 suele romper las tildes; los permisos del Modo
+  B irán en un archivo versionado.
+● Write(evaluacion\permisos_modo_b.json)
+  ⎿  Wrote 28 lines to evaluacion\permisos_modo_b.json
+       1 {
+       2   "permissions": {
+       3     "allow": [
+       4       "mcp__bcrp",
+       5       "Skill",
+       6       "Read",
+       7       "Glob",
+       8       "Grep",
+       9       "Bash(uv run python *skills*scripts*)"
+      10     ],
+     … +18 lines (ctrl+o to expand)
+
+● Write(evaluacion\ejecutar.py)
+  ⎿  Wrote 112 lines to evaluacion\ejecutar.py
+       1 """Experimento de la Parte 4: cada pregunta en una sesión indepe
+         ndiente de `claude -p`.
+       2 
+       3 Modo A (sin MCP ni Skills): desde una carpeta vacía en %TEMP%, s
+         in servidores MCP,
+       4     sin Skills, sin web y sin herramientas para leer archivos o 
+         ejecutar comandos.
+       5 Modo B (con MCP y Skills): desde la raíz del repo, solo con el M
+         CP `bcrp` de
+       6     .mcp.json y las Skills; sin web; permisos en evaluacion/perm
+     … +107 lines (~4 KB) (ctrl+o to expand)
+
+● Antes del piloto voy a intentar leer los archivos bloqueados con Read, Glob,
+  Grep y Bash desde una sesión con la misma configuración, para comprobar que la
+  restricción del Modo B se cumple.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● La restricción del Modo B bloquea las siete acciones prohibidas: Read, Grep,
+  Bash y Glob, según lo verificado. Ahora confirmo que Glob sí filtra de verdad
+  revisando evidencias_ia/.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● El glob filtra bien: evidencias_ia/ tiene 19 archivos y la sesión no vio
+  ninguno. Hay dos PNG tuyos sin commit en evidencias_ia/evaluacion/, que dejo
+  sin tocar mientras corro el piloto con B1 en ambos modos.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● El piloto funcionó en ambos modos. Antes de enseñártelo, voy a bloquear de
+  forma explícita en los dos modos herramientas como RemoteTrigger, CronCreate,
+  SendMessage y ScheduleWakeup, que podrían lanzar agentes en la nube, y repetir
+  la prueba con esa configuración final.
+
+● Update(evaluacion\ejecutar.py)
+  ⎿  Added 7 lines, removed 5 lines
+      43      "--strict-mcp-config",           # ignora toda config MCP s
+          alvo --mcp-config
+      44  ]
+      45  
+      46 -# Herramientas bloqueadas en cada modo. Agent y Monitor se bloq
+         -uean en ambos:                                                 
+      47 -# un subagente o un monitor podrían saltarse las restricciones.
+      48 -BLOQUEO_A = ["Skill", "WebSearch", "WebFetch", "Bash", "PowerSh
+         -ell",                                                          
+      49 -             "Read", "Glob", "Grep", "Agent", "Monitor"]       
+      50 -BLOQUEO_B = ["WebSearch", "WebFetch", "PowerShell", "Agent", "M
+         -onitor"]                                                       
+      46 +# Herramientas bloqueadas en ambos modos: las que lanzan otros 
+         +agentes, tareas                                                
+      47 +# programadas o sesiones remotas, que podrían saltarse las rest
+         +ricciones.                                                     
+      48 +BLOQUEO_COMUN = ["WebSearch", "WebFetch", "PowerShell", "Agent"
+         +, "Monitor",                                                   
+      49 +                 "RemoteTrigger", "CronCreate", "ScheduleWakeup
+         +", "SendMessage",                                              
+      50 +                 "DesignSync", "PushNotification", "EnterWorktr
+         +ee"]                                                           
+      51 +BLOQUEO_A = [*BLOQUEO_COMUN, "Skill", "Bash", "Read", "Glob", "
+         +Grep"]                                                         
+      52 +BLOQUEO_B = BLOQUEO_COMUN                                      
+      53  
+      54  
+      55  def comando(modo: str) -> tuple[list[str], Path]:
+
+  Committed 406d0ca, ran 2 shell commands (ctrl+o to expand)
+
+● La prueba piloto salió bien en los dos modos y el bloqueo del Modo B funciona.
+  Falta tu OK para correr las 20 sesiones.
+
+  Prueba de bloqueo del Modo B. Antes del piloto le pedí a una sesión, con la
+  misma configuración del Modo B, que intentara leer los archivos prohibidos:
+  - Read: se le negó el acceso a informes/verificacion.md,
+    evaluacion/preguntas.csv y salidas/bcrp_PN01273PM.csv.
+  - Grep: se le negó el acceso a informes/.
+  - Glob: no vio ningún archivo en evidencias_ia/, aunque esa carpeta tiene 19.
+  - Bash: se le negaron cat y head sobre esos archivos.
+  - Lo permitido: sí pudo leer salidas/indicadores.csv, que es una salida de la
+    Skill.
+
+  Piloto con la pregunta B1 (inflación de Lima, dic-2024; esperada 1,97 ± 0,05):
+
+  ┌──────┬───────────────────────────────────────┬─────────────────┬────────┐
+  │ Modo │          Herramientas usadas          │   Línea final   │ Tiempo │
+  ├──────┼───────────────────────────────────────┼─────────────────┼────────┤
+  │ A    │ ninguna (responde de memoria y lo     │ RESPUESTA: 1,97 │ 2,9 s  │
+  │      │ admite)                               │  %              │        │
+  ├──────┼───────────────────────────────────────┼─────────────────┼────────┤
+  │ B    │ mcp__bcrp__serie (PN01273PM, 2024-12) │ RESPUESTA: 1,97 │ 7,1 s  │
+  │      │                                       │  %              │        │
+  └──────┴───────────────────────────────────────┴─────────────────┴────────┘
+
+  Ninguna de las dos sesiones intentó leer archivos prohibidos. Ambas acertaron,
+  así que B1 no diferencia los modos; las preguntas de máximos, de la ENAHO y
+  la brecha deberían separarlos más.
+
+  Lo que cambié respecto a lo acordado:
+  - Más herramientas bloqueadas. En ambos modos bloqueé además Agent, Monitor,
+    RemoteTrigger, CronCreate, ScheduleWakeup, SendMessage, DesignSync,
+    PushNotification y EnterWorktree. Pueden lanzar otros agentes o tareas que
+    se salten las restricciones. Repetí el piloto con esta configuración final.
+  - Bash en el Modo B. Solo se permite el comando que ejecutan las Skills (uv 
+    run python …skills…scripts…); el resto se deniega solo.
+  - El script es Python. El ejecutor es evaluacion/ejecutar.py y no .ps1, porque
+    PowerShell 5.1 estropea las tildes de las preguntas.
+
+  Detalles para la calificación y el análisis:
+  - Las respuestas usan coma decimal («1,97 %»). calificar.py aceptará coma o
+    punto.
+  - Si en la línea RESPUESTA: aparecen varios números, una cifra esperada
+    contará como acertada si cualquiera de ellos cae dentro de la tolerancia.
+  - tiempo_segundos será el tiempo que reporta cada sesión. El tiempo de reloj
+    queda en los archivos .meta.json.
+  - En el Modo B, Claude Code ve el estado de git del repo: nombres de archivos
+    y mensajes de commit, pero no cifras. Lo anotaré como limitación en
+    comparacion.md.
+
+  Hice commit del ejecutor y de los permisos (406d0ca). Los registros del piloto
+  no van en ese commit porque la corrida completa los reemplazará.
+
+  ¿Corro las 20 sesiones?
+
+✻ Sautéed for 3m 53s · done 7:37 p.m.
+
+❯ Sí, corre las 20 sesiones, pero antes ajusta calificar.py: en la línea        
+  RESPUESTA compara los números en orden con las cifras esperadas (el primero   
+  con la primera, el segundo con la segunda). Si hay más números que cifras     
+  esperadas, márcala como incorrecta por ambigüedad. Para meses y               
+  departamentos, exige la coincidencia del nombre. Documenta esta regla en      
+  comparacion.md antes de ver los resultados.                                   
+
+● Primero escribo calificar.py y la sección de reglas de comparacion.md. Hago
+  commit de ambos antes de lanzar las 20 sesiones, para que la regla quede
+  fijada antes de ver resultados.
+
+● Write(evaluacion\calificar.py)
+  ⎿  Wrote 222 lines to evaluacion\calificar.py
+       1 """Califica los registros del experimento y genera evaluacion/re
+         sultados.csv.
+       2 
+       3 La corrección la decide este script con reglas fijas (documentad
+         as en
+       4 evaluacion/comparacion.md, sección «Regla de calificación»):
+       5 
+       6 1. Se toma la última línea de la respuesta final que empiece con
+          «RESPUESTA:»
+       7    (se ignoran asteriscos o símbolos de formato). Si no existe: 
+     … +216 lines (~10 KB) (ctrl+o to expand)
+
+● Quito una variable que sobró y pruebo la regla con casos inventados antes de
+  usarla con resultados reales:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La prueba falló por la codificación de la consola de Windows, no por la regla.
+  La repito con salida UTF-8:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Los 29 casos de prueba ya pasan, así que escribo comparacion.md solo con
+  diseño, herramientas, restricción y regla de calificación; los resultados
+  llegarán después de la corrida.
+
+● Write(evaluacion\comparacion.md)
+  ⎿  Wrote 119 lines to evaluacion\comparacion.md
+       1 # Evaluación: Claude Code con y sin MCP y Skills
+       2 
+       3 > Las secciones 1 a 4 se escribieron y se registraron en git **a
+         ntes** de
+       4 > ejecutar las 20 sesiones. Las respuestas esperadas (`preguntas
+         .csv`) y la
+       5 > regla de calificación (`calificar.py`) no se modificaron despu
+         és de ver
+       6 > los resultados.
+       7 
+     … +112 lines (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+  ⎿  1 action not run · permission denied
+     │ Reason: Remove-Item on system path 'evaluacion/registros/*' is blocked. This path is protected from removal.
+
+● No se borraron los registros del piloto (y no hace falta: la corrida completa
+  los sobrescribe). Hago solo el commit:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La regla quedó fijada en el commit 7b9c630. Lanzo las 20 sesiones en segundo
+  plano. Las del Modo B sobre la ENAHO pueden tardar varios minutos si ejecutan
+  la Skill de limpieza.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● La corrida está en marcha. Te aviso con los resultados cuando termine.
+
+✻ Crunched for 2m 30s · done 7:41 p.m.
+
+※ recap: Estamos evaluando si el MCP y las Skills mejoran las respuestas de Claude; las 20 sesiones se están ejecutando en segundo plano. Cuando terminen, correré calificar.py y completaré los resultados en comparacion.md. (disable recaps in /config)
+
+● Background command "Run all 20 experiment sessions" completed (exit code 0)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Modo A acertó 3 de 10 y Modo B 8 de 10; ahora reviso qué herramientas usó el
+  Modo B, ya que veo comandos Bash (ls, cat) que no deberían estar permitidos.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Encontré tres cosas importantes. Antes de escribir reviso todos los registros
+  del Modo B para ver si alguna sesión tocó rutas bloqueadas, y calculo los
+  tiempos promedio:
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ninguna sesión del Modo B tocó rutas bloqueadas ni invocó una Skill, y el
+  único intento denegado fue ls evaluacion en C2. Ahora reviso que los registros
+  no contengan claves ni tokens antes de hacer commit.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Los registros están limpios, sin claves ni tokens, solo contadores de uso.
+  Ahora completo comparacion.md, tocando únicamente dos notas nuevas en las
+  secciones 1 a 4.
+
+● Update(evaluacion\comparacion.md)
+  ⎿  Added 6 lines
+      48  ToolSearch, Write, mcp__bcrp__buscar_series, mcp__bcrp__correla
+          cion,
+      49  mcp__bcrp__graficar_serie, mcp__bcrp__resumen, mcp__bcrp__serie
+          `.
+      50  
+      51 +> **Nota añadida después de la corrida.** La fila «Comandos» de
+         +l Modo B no                                                    
+      52 +> se cumplió tal como se describió: en `dontAsk`, Claude Code a
+         +probó solo                                                     
+      53 +> los comandos Bash de **solo lectura** (`ls`, `cat`, `head`, `
+         +grep`) aunque                                                  
+      54 +> no estuvieran en la lista permitida. Las reglas de la sección
+         + 3 sí se                                                       
+      55 +> aplicaron también a Bash (`ls evaluacion` fue denegado en C2)
+         +. Ver 5.5.                                                     
+      56 +                                                               
+      57  ## 3. Restricción de lectura en el Modo B
+      58  
+      59  Para que el Modo B obtenga las cifras solo con el MCP y las Ski
+          lls (y no
+
+● Update(evaluacion\comparacion.md)
+  ⎿  Added 111 lines, removed 1 line
+      122  
+      123  ## 5. Resultados
+      124  
+      125 -*Pendiente: se completa después de ejecutar las 20 sesiones.* 
+      125 +Corrida del 2026-11-08, 20 sesiones (10 por modo), todas termi
+          +naron con                                                     
+      126 +código 0. Detalle por pregunta en `evaluacion/resultados.csv`.
+      127 +                                                              
+      128 +### 5.1 Resumen                                               
+      129 +                                                              
+      130 +| | Modo A (sin MCP ni Skills) | Modo B (con MCP y Skills) |  
+      131 +|---|---|---|                                                 
+      132 +| Correctas | **3 / 10** | **8 / 10** |                       
+      133 +| Incorrectas (cifra fuera de tolerancia) | 4 (B3, B4, E2, C2)
+          + | 0 |                                                        
+      134 +| Incorrectas por ambigüedad (regla 3) | 2 (E3, C1) | 2 (C1, C
+          +2) |                                                          
+      135 +| Sin cifra (no respondió) | 1 (E4) | 0 |                     
+      136 +| Sin línea `RESPUESTA` | 0 | 0 |                             
+      137 +| Afirmaciones causales en combinadas | 0 | 0 |               
+      138 +| Tiempo promedio (`duration_ms`) | 4,5 s (mediana 4,0) | 10,7
+          + s (mediana 9,1) |                                            
+      139 +| Tiempo de reloj promedio | 6,1 s | 16,2 s |                 
+      140 +                                                              
+      141 +### 5.2 Por pregunta                                          
+      142 +                                                              
+      143 +| id | Esperada | Modo A | Modo B | Cambio |                  
+      144 +|---|---|---|---|---|                                         
+      145 +| B1 | 1,97 | 1,97 ✔ | 1,97 ✔ (MCP `serie`) | igual |         
+      146 +| B2 | 8,81; junio 2022 | 8,81, junio 2022 ✔ | 8,81, junio 202
+          +2 ✔ (MCP `resumen`) | igual |                                 
+      147 +| B3 | −39,28 | −40,5 ✘ | −39,28 ✔ (MCP `serie`) | **mejora** 
+          +|                                                             
+      148 +| B4 | 3,737 | ≈3,75 ✘ | 3,737 ✔ (MCP `serie`) | **mejora** | 
+      149 +| E1 | 27,6 | 27,6 ✔ | 27,6 ✔ (memoria, sin herramientas) | ig
+          +ual |                                                         
+      150 +| E2 | 39,3 | 39,8 ✘ | 39,3 ✔ (`Grep` + salidas previas) | **m
+          +ejora** |                                                     
+      151 +| E3 | 24,8 | «≈26,1 % (aprox. 26 %)» ✘ ambigua | 24,8 ✔ (`Gre
+          +p` en README) | **mejora** |                                  
+      152 +| E4 | Cajamarca; 45,0 | no responde ✘ | Cajamarca, 45,0 ✔ (`B
+          +ash cat` de salidas previas) | **mejora** |                   
+      153 +| C1 | 1,97; 27,6 | 1,97 y 27,6 ✘ ambigua | 1,97 y 27,6 ✘ ambi
+          +gua | igual |                                                 
+      154 +| C2 | 8,81; 14,5 | 8,81 y ≈14,7 ✘ | 8,81 y 14,5 ✘ ambigua | i
+          +gual (A erró la cifra; B, por formato) |                      
+      155 +                                                              
+      156 +Mejoraron 5 preguntas (B3, B4, E2, E3, E4); ninguna empeoró.  
+      157 +                                                              
+      158 +### 5.3 Principales errores                                   
+      159 +                                                              
+      160 +- **Modo A, cifras de memoria desactualizadas o de otra fuente
+          +.** En B3                                                     
+      161 +  respondió −40,5 %, cifra cercana a la que difundió el INEI p
+          +ara abril de                                                  
+      162 +  2020; la serie PN01728AM del BCRP marca −39,28 %. En B4 redo
+          +ndeó el tipo                                                  
+      163 +  de cambio a 3,75. En E2 dio 39,8 % (cerca de la pobreza rura
+          +l de 2023, no                                                 
+      164 +  la de 2024) y en C2 estimó la brecha en 14,7 pp.            
+      165 +- **Modo A, respuestas con dudas.** En E3 dio dos cifras («≈26
+          +,1 %                                                          
+      166 +  (aprox. 26 %, por confirmar)») y en E4 declaró que no podía 
+          +confirmar el                                                  
+      167 +  dato sin consultar al INEI. Es una conducta prudente, pero n
+          +o responde.                                                   
+      168 +- **Ambigüedad por el formato (ambos modos).** C1 falló en los
+          + dos modos                                                    
+      169 +  porque la línea decía «Inflación Lima Metropolitana dic-2024
+          + **(12                                                        
+      170 +  meses)** = 1,97 %…»: el «12» de la etiqueta cuenta como núme
+          +ro según la                                                   
+      171 +  regla 3. En el Modo B, C2 falló porque la línea incluyó la c
+          +uenta                                                         
+      172 +  «(39,3 % − 24,8 %)». En los tres casos las cifras eran corre
+          +ctas.                                                         
+      173 +  La regla no se cambió después de ver los resultados.        
+      174 +  **Solo como sensibilidad** (no es la calificación oficial): 
+          +sin esas                                                      
+      175 +  etiquetas y cuentas, el Modo A tendría 4/10 y el Modo B 10/1
+          +0.                                                            
+      176 +- **Ninguna combinada afirmó causalidad** en ninguno de los do
+          +s modos.                                                      
+      177 +                                                              
+      178 +### 5.4 Qué herramientas usó realmente el Modo B              
+      179 +                                                              
+      180 +- **MCP `bcrp`: se usó en las 6 preguntas con datos del BCRP**
+          + (B1-B4,                                                      
+      181 +  C1, C2), con los códigos correctos (PN01273PM, PN01728AM, PN
+          +01206PM). En                                                  
+      182 +  B4 también consultó una serie diaria (PD04638PD) para contra
+          +star.                                                         
+      183 +- **Skills: ninguna sesión invocó una Skill.** Las cifras de l
+          +a ENAHO no se                                                 
+      184 +  recalcularon con los microdatos. Salieron de:               
+      185 +  - memoria del modelo (E1);                                  
+      186 +  - resultados que las Skills ya habían generado en la Parte 2
+          +, guardados en                                                
+      187 +    `salidas/` (`grafico_por_area_2024.csv`, `grafico_por_depa
+          +rtamento_2024.csv`,                                           
+      188 +    `validacion.txt`) (E2, E4, C2);                           
+      189 +  - el `README.md`, que copia la salida de validación con las 
+          +cifras de                                                     
+      190 +    referencia (E3), y `.claude/skills/limpiando-enaho/referen
+          +ce.md`, que trae                                              
+      191 +    las cifras oficiales del INEI (C1);                       
+      192 +  - en E4, además, `datos/pobreza_departamento_2024.csv` (tabl
+          +a de referencia                                               
+      193 +    del curso que descarga la Skill del mapa).                
+      194 +                                                              
+      195 +### 5.5 Desviaciones respecto del diseño                      
+      196 +                                                              
+      197 +1. **Bash de solo lectura permitido en el Modo B.** Ver la not
+          +a de la                                                       
+      198 +   sección 2. Así se leyeron `salidas/grafico_por_departamento
+          +_2024.csv` y                                                  
+      199 +   `datos/pobreza_departamento_2024.csv` en E4. Ninguno estaba
+          + en la lista                                                  
+      200 +   bloqueada.                                                 
+      201 +2. **Fuentes con respuestas no bloqueadas.** La restricción de
+          + la sección 3                                                 
+      202 +   cubría `evaluacion/`, `informes/`, `evidencias_ia/` y `sali
+          +das/bcrp_*`,                                                  
+      203 +   pero `README.md`, `reference.md`, `datos/pobreza_departamen
+          +to_2024.csv` y                                                
+      204 +   las demás salidas de las Skills también contienen las cifra
+          +s de la ENAHO.                                                
+      205 +   Por eso el acierto del Modo B en E2-E4 refleja **el trabajo
+          + previo del                                                   
+      206 +   repositorio** (Skills ya ejecutadas y documentadas), no la 
+          +ejecución de                                                  
+      207 +   una Skill durante la evaluación.                           
+      208 +3. **Accesos bloqueados.** El único intento de entrar a una ru
+          +ta bloqueada                                                  
+      209 +   (`ls evaluacion` en C2) fue denegado. Ninguna sesión leyó c
+          +ontenido de                                                   
+      210 +   `evaluacion/`, `informes/`, `evidencias_ia/` ni `salidas/bc
+          +rp_*`. En E4,                                                 
+      211 +   `ls salidas` mostró los **nombres** de los archivos `bcrp_*
+          +.csv`, no su                                                  
+      212 +   contenido.                                                 
+      213 +                                                              
+      214 +## 6. Conclusión                                              
+      215 +                                                              
+      216 +- **El MCP del BCRP es claramente útil.** Con él, el Modo B ac
+          +ertó las 4                                                    
+      217 +  preguntas del BCRP y la parte BCRP de las combinadas, con el
+          + código de la                                                 
+      218 +  serie y la fuente citados. Sin él, el Modo A acertó solo los
+          + dos datos más                                                
+      219 +  conocidos (inflación de diciembre 2024 y su máximo) y falló 
+          +los que exigen                                                
+      220 +  precisión (PBI de abril 2020, tipo de cambio). El costo es t
+          +iempo: unas                                                   
+      221 +  2,4 veces más por pregunta (10,7 s frente a 4,5 s), que sigu
+          +e siendo poco.                                                
+      222 +- **Las Skills no se pusieron a prueba en esta evaluación.** E
+          +l Modo B                                                      
+      223 +  acertó las 4 preguntas de la ENAHO, pero ninguna sesión ejec
+          +utó una Skill:                                                
+      224 +  el modelo prefirió leer las salidas y la documentación que l
+          +as Skills ya                                                  
+      225 +  habían dejado en el repositorio, o responder de memoria. Est
+          +o muestra el                                                  
+      226 +  valor de un repositorio bien documentado y reproducible, per
+          +o **no permite                                                
+      227 +  atribuir la mejora a las Skills en sí**. Para medirlas habrí
+          +a que bloquear                                                
+      228 +  también `salidas/`, `datos/pobreza_departamento_2024.csv`, `
+          +README.md` y                                                  
+      229 +  `reference.md`, o formular preguntas que solo se respondan r
+          +ecalculando                                                   
+      230 +  con los microdatos (por ejemplo, un corte que no esté en `sa
+          +lidas/`).                                                     
+      231 +- **El formato de la respuesta pesa.** Tres de las cinco respu
+          +estas                                                         
+      232 +  incorrectas tenían cifras correctas pero agregaron etiquetas
+          + o cuentas                                                    
+      233 +  con números. Una instrucción más estricta («solo los valores
+          +, separados                                                   
+      234 +  por punto y coma») reduciría ese ruido en futuras corridas. 
+      235 +- **Ningún modo afirmó causalidad** entre inflación y pobreza.
+
+● Corrijo un conteo que quedó mal en la conclusión: en total hubo 9 respuestas
+  incorrectas, no 5.
+
+● Update(evaluacion\comparacion.md)
+  ⎿  Added 3 lines, removed 3 lines
+      228    también `salidas/`, `datos/pobreza_departamento_2024.csv`, `
+           README.md` y
+      229    `reference.md`, o formular preguntas que solo se respondan r
+           ecalculando
+      230    con los microdatos (por ejemplo, un corte que no esté en `sa
+           lidas/`).
+      231 -- **El formato de la respuesta pesa.** Tres de las cinco respu
+          -estas                                                         
+      232 -  incorrectas tenían cifras correctas pero agregaron etiquetas
+          - o cuentas                                                    
+      233 -  con números. Una instrucción más estricta («solo los valores
+          -, separados                                                   
+      231 +- **El formato de la respuesta pesa.** Tres de las nueve respu
+          +estas                                                         
+      232 +  incorrectas (C1 en ambos modos y C2 en el Modo B) tenían cif
+          +ras correctas,                                                
+      233 +  pero agregaron etiquetas o cuentas con números. Una instrucc
+          +ión más estricta («solo los valores, separados                
+      234    por punto y coma») reduciría ese ruido en futuras corridas.
+      235  - **Ningún modo afirmó causalidad** entre inflación y pobreza.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Las 20 sesiones terminaron sin fallos: el Modo A acertó 3 de 10 y el Modo B 8 
+  de 10. Ninguna pregunta empeoró con MCP y Skills, y mejoraron 5: B3, B4, E2,
+  E3 y E4.
+
+  ┌─────────────────────┬─────────────────────────┬────────────────────────┐
+  │                     │   Modo A (sin MCP ni    │   Modo B (con MCP y    │
+  │                     │         Skills)         │        Skills)         │
+  ├─────────────────────┼─────────────────────────┼────────────────────────┤
+  │ Correctas           │ 3 / 10                  │ 8 / 10                 │
+  ├─────────────────────┼─────────────────────────┼────────────────────────┤
+  │ Tiempo promedio     │ 4,5 s                   │ 10,7 s                 │
+  ├─────────────────────┼─────────────────────────┼────────────────────────┤
+  │ Afirmaciones        │ 0                       │ 0                      │
+  │ causales            │                         │                        │
+  └─────────────────────┴─────────────────────────┴────────────────────────┘
+
+  Lo más importante:
+  - El MCP del BCRP explica la mejora en las preguntas del BCRP. El Modo B
+    acertó las 4 y citó el código de cada serie. De memoria, el Modo A falló el
+    PBI de abril de 2020 (−40,5 en vez de −39,28) y el tipo de cambio (≈3,75 en
+    vez de 3,737).
+  - Ninguna sesión usó una Skill. El Modo B acertó las 4 preguntas de la ENAHO,
+    pero las cifras salieron de archivos que dejaron las Skills en la Parte 2:
+    - los resultados guardados en salidas/;
+    - el README.md;
+    - reference.md;
+    - una pregunta respondida de memoria.
+
+    Por eso esta evaluación muestra el valor de un repositorio bien documentado,
+    pero no mide las Skills en sí. Lo dejo escrito así en la conclusión.
+  - Hubo una diferencia con lo acordado. En el Modo B, Claude Code aprobó por su
+    cuenta los comandos Bash que solo leen (ls, cat, grep), aunque solo había
+    permitido los scripts de las Skills. El bloqueo de evaluacion/, informes/,
+    evidencias_ia/ y salidas/bcrp_* sí funcionó: el único intento de entrar a
+    esas rutas fue denegado. Lo documenté en una nota marcada como añadida
+    después de la corrida.
+  - Tres respuestas tenían las cifras correctas pero contaron como incorrectas 
+    por ambigüedad: C1 en ambos modos, por la etiqueta «(12 meses)», y C2 en el
+    Modo B, porque agregó la cuenta «39,3 − 24,8». No cambié la regla después de
+    ver los resultados. Como dato aparte, no oficial, sin ese problema de
+    formato el resultado sería 4/10 frente a 10/10.
+
+  Todo está en evaluacion/comparacion.md y evaluacion/resultados.csv, junto con
+  los registros completos. Hice cuatro commits sin push, del b179434 al 04692a5.
+  No hice commit de los dos PNG tuyos que están sin seguimiento en
+  evidencias_ia/evaluacion/.
+
+  Recordatorio: exporta esta conversación a evidencias_ia/evaluacion/.
+
+✻ Brewed for 1m 59s · done 7:47 p.m.
+
+※ recap: Terminé la Parte 4, la evaluación con y sin MCP y Skills: el Modo A acertó 3/10 y el Modo B 8/10, todo documentado y con commit. Solo te falta exportar esta conversación a evidencias_ia/evaluacion/. (disable recaps in /config)
+
+❯ No cambies la corrida oficial ni las respuestas esperadas. Agrega una corrida 
+  complementaria "Modo B2" solo para las 4 preguntas ENAHO y las 2 combinadas,  
+  con la misma configuración del Modo B y las mismas instrucciones, pero        
+  bloqueando además Read, Glob, Grep y los comandos Bash de lectura sobre       
+  README.md, **/reference.md, salidas/indicadores.csv, salidas/validacion.txt,  
+  salidas/grafico_* y salidas/comparacion_mapa.csv, para que las cifras de la   
+  ENAHO solo puedan obtenerse ejecutando las Skills. Antes de correrla, borra   
+  salidas/personas_2024.parquet y salidas/hogares_2024.parquet.                 
+  Califícala con la misma regla, guarda sus registros aparte y agrega a         
+  comparacion.md una sección "Análisis complementario: Modo B2", aclarando que  
+  se añadió después de la corrida oficial, por qué, y si las Skills se          
+  activaron.                                                                    
+  El resultado oficial del experimento sigue siendo A vs. B. Commit al          
+  terminar.                                                                     
+
+● Primero busco qué otros archivos del repo contienen las cifras de la ENAHO. Si
+  quedara alguno sin bloquear, el Modo B2 podría volver a leer las respuestas
+  sin ejecutar las Skills.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Otras fuentes también contienen las cifras, como el CSV de pobreza, el
+  contraste del informe, las figuras y el mapa. Ahora reviso los archivos de las
+  Skills, que sí deben poder leerse para que funcionen.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Encontré otras cuatro fuentes que también filtrarían las cifras, así que voy a
+  bloquear esas rutas y denegar los comandos Bash de lectura antes de preparar
+  la configuración.
+
+● Write(evaluacion\permisos_modo_b2.json)
+  ⎿  Wrote 65 lines to evaluacion\permisos_modo_b2.json
+       1 {
+       2   "permissions": {
+       3     "allow": [
+       4       "mcp__bcrp",
+       5       "Skill",
+       6       "Read",
+       7       "Glob",
+       8       "Grep",
+       9       "Bash(uv run python *skills*scripts*)"
+      10     ],
+     … +55 lines (ctrl+o to expand)
+
+● Ahora agrego el modo B2 a ejecutar.py sin cambiar cómo funcionan A y B:
+
+● Bash(python - <<'EOF'
+      p = "evaluacion/ejecutar.py"…)
+  ⎿  Modo A: 3/10 correctas
+     Modo B: 8/10 correctas
+     resultados.csv sin cambios
+  ⎿  Updated evaluacion\calificar.py (+14 -5)
+      19  5. Combinadas: además, el texto completo no debe afirmar causal
+          idad (lista
+      20     de expresiones causales; no cuenta si va precedida de una ne
+          gación).
+      21  
+      22 -Uso:  uv run evaluacion/calificar.py                           
+      22 +Uso:  uv run evaluacion/calificar.py                     # corr
+         +ida oficial (A y B)                                            
+      23 +      uv run evaluacion/calificar.py --b2                # comp
+         +lementaria (B2)                                                
+      24  """
+      25  
+      26 +import argparse                                                
+      27  import csv
+      28  import json
+      29  import re
+     ...
+      178  
+      179  
+      180  def main() -> None:
+      181 +    ap = argparse.ArgumentParser()                            
+      182 +    ap.add_argument("--b2", action="store_true", help="calific
+          +a la corrida complementaria B2")                              
+      183 +    args = ap.parse_args()                                    
+      184 +    modos = ("B2",) if args.b2 else ("A", "B")                
+      185 +    registros = EVAL / "registros_b2" if args.b2 else REGISTRO
+          +S                                                             
+      186 +    salida = EVAL / ("resultados_b2.csv" if args.b2 else "resu
+          +ltados.csv")                                                  
+      187 +                                                              
+      188      with open(EVAL / "preguntas.csv", encoding="utf-8") as f:
+      189          preguntas = list(csv.DictReader(f))
+      190      filas = []
+      182 -    for modo in ("A", "B"):                                   
+      191 +    for modo in modos:                                        
+      192          for p in preguntas:
+      184 -            ruta = REGISTROS / f"{modo}_{p['id']}.jsonl"      
+      193 +            ruta = registros / f"{modo}_{p['id']}.jsonl"      
+      194              if not ruta.exists():
+      195                  continue
+      196              info = leer_registro(ruta)
+     ...
+      215                  "tiempo_segundos": info["tiempo"] if info["tie
+           mpo"] is not None else meta.get("tiempo_reloj_s"),
+      216                  "errores": " | ".join(motivos + info["errores"
+           ]),
+      217              })
+      209 -    with open(EVAL / "resultados.csv", "w", encoding="utf-8", 
+          -newline="") as f:                                             
+      218 +    with open(salida, "w", encoding="utf-8", newline="") as f:
+      219          w = csv.DictWriter(f, fieldnames=list(filas[0]))
+      220          w.writeheader()
+     … 6 more lines (ctrl+o to expand)
+  ⎿  Updated evaluacion\ejecutar.py (+11 -3)
+      13  Uso:
+      14      uv run evaluacion/ejecutar.py --modos A B --ids B1      # p
+          iloto
+      15      uv run evaluacion/ejecutar.py --modos A B               # l
+          as 20 corridas
+      16 +                                                               
+      17 +Modo B2 (análisis complementario, añadido después de la corrida
+         + oficial): igual                                               
+      18 +que B, pero con evaluacion/permisos_modo_b2.json, que además bl
+         +oquea los archivos                                             
+      19 +con cifras ENAHO ya calculadas. Registros aparte en evaluacion/
+         +registros_b2/.                                                 
+      20 +    uv run evaluacion/ejecutar.py --modos B2 --ids E1 E2 E3 E4 
+         +C1 C2                                                          
+      21  """
+      22  
+      23  import argparse
+     ...
+      32  RAIZ = Path(__file__).resolve().parent.parent
+      33  EVAL = RAIZ / "evaluacion"
+      34  REGISTROS = EVAL / "registros"
+      35 +REGISTROS_B2 = EVAL / "registros_b2"                           
+      36  CARPETA_A = Path(os.environ["TEMP"]) / "tarea4_evaluacion_modoA
+          "
+      37  
+      38  MODELO = "sonnet"
+     ...
+      66              raise SystemExit(f"La carpeta del Modo A no está va
+          cía: {CARPETA_A}")
+      67          # Sin --mcp-config: con --strict-mcp-config no se carga
+           ningún servidor MCP.
+      68          return [claude, *COMUNES, "--disallowedTools", *BLOQUEO
+          _A], CARPETA_A
+      69 +    permisos = "evaluacion/permisos_modo_b2.json" if modo == "B
+         +2" else "evaluacion/permisos_modo_b.json"                      
+      70      return [claude, *COMUNES,
+      71              "--mcp-config", ".mcp.json",
+      65 -            "--settings", "evaluacion/permisos_modo_b.json",   
+      72 +            "--settings", permisos,                            
+      73              "--disallowedTools", *BLOQUEO_B], RAIZ
+      74  
+      75  
+      76  def correr(modo: str, fila: dict) -> None:
+      77      cmd, cwd = comando(modo)
+      78      prompt = f"{fila['pregunta']}\n\n{INSTRUCCION}"
+      72 -    base = REGISTROS / f"{modo}_{fila['id']}"                  
+      79 +    base = (REGISTROS_B2 if modo == "B2" else REGISTROS) / f"{m
+         +odo}_{fila['id']}"                                             
+      80      inicio = time.time()
+      81      error = ""
+      82      try:
+     ...
+      103  
+      104  def main() -> None:
+      105      ap = argparse.ArgumentParser()
+     … 12 more lines (ctrl+o to expand)
+
+● La corrida oficial se califica exactamente igual que antes. Ahora hago la
+  prueba adversarial del B2: le pido a una sesión con esa configuración que
+  intente 12 formas de leer las cifras.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Todos los intentos fueron bloqueados menos uno: Grep aún halla «Cajamarca 45.0
+  %» en .claude/skills/mapeando-enaho/SKILL.md, un ejemplo que la Skill
+  necesita, así que lo documentaré y revisaré los registros. Ahora borro los dos
+  parquet.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● La corrida B2 está en marcha (6 sesiones). Te aviso con los resultados cuando
+  termine.
+
+✻ Brewed for 2m 18s · done 7:52 p.m.
+
+● Background command "Run Mode B2 for the 6 ENAHO/combined questions" completed
+(exit code 0)
+
+● Bash(cat "C:/Users/LENOVO/AppData/Local/Temp/claude/80338e247642c039/a5085e9a-
+      556e-4e57-99be-4c358dcb18ad/scratchpad/corrida_b2.txt";
+      PYTHONIOENCODING=utf-8 uv run e…)
+  ⎿  B2 E1: 8.4 s, código 0
+     B2 E2: 9.5 s, código 0
+     B2 E3: 23.3 s, código 0
+     … +35 lines (ctrl+o to expand)
+  ⎿  Created evaluacion\resultados_b2.csv (+7 -0)
+      1 +modo,id,pregunta,respuesta_esperada,respuesta_generada,fuente_us
+        +ada,herramientas_usadas,correcta,tiempo_segundos,errores        
+      2 +B2,E1,"Según la ENAHO 2024 del INEI, ¿qué porcentaje de la pobla
+        +ción del Perú estaba en situación de pobreza monetaria en 2024?"
+        +,27.6,"27,6 %",memoria del modelo (sin herramientas),ninguna,sí,
+        +3.3,                                                            
+      3 +B2,E2,"Según la ENAHO 2024 del INEI, ¿qué porcentaje de la pobla
+        +ción del área rural del Perú estaba en situación de pobreza mone
+        +taria en 2024?",39.3,"39,6 %",memoria del modelo (sin herramient
+        +as),ninguna,no,4.5,39.6 fuera de tolerancia (39.3 ± 0.1)        
+      4 +B2,E3,"Según la ENAHO 2024 del INEI, ¿qué porcentaje de la pobla
+        +ción del área urbana del Perú estaba en situación de pobreza mon
+        +etaria en 2024?",24.8,"≈26 % (área urbana, ENAHO 2024; sin verif
+        +icar en la fuente)","Bash ls; ls salidas 2>/dev/null; grep -rIl 
+        +""urban"" --include=*.csv --include=*.json -",Grep×4 | Bash×1 | 
+        +Glob×1,no,17.6,"26.0 fuera de tolerancia (24.8 ± 0.1) | error en
+        + Bash: Permission to use Bash with command ls; ls salidas ; grep
+        + -rIl ""urban"" --include=*.csv --include=*.json --include=*.md 
+        +. | permiso denegado: Bash"                                     
+      5 +B2,E4,"Según la ENAHO 2024 del INEI, ¿qué departamento del Perú 
+        +tuvo la mayor tasa de pobreza monetaria en 2024 y cuál fue esa t
+        +asa?",Cajamarca ; 45.0,No verificado. Falta calcular la pobreza 
+        +por departamento con los microdatos de la ENAHO 2024.,memoria de
+        +l modelo (sin herramientas),Grep×2 | Glob×1,no,13.6,"falta cifra
+        + (0 de 1) | departamento: se halló ninguno, se esperaba cajamarc
+        +a"                                                              
+      6 +B2,C1,"¿Cuál fue la inflación de Lima Metropolitana en 12 meses 
+        +en diciembre de 2024 (BCRP) y cuál fue la tasa de pobreza moneta
+        +ria nacional en 2024 (ENAHO, INEI)?",1.97 ; 27.6,"Inflación Lima
+        + Metropolitana dic-2024 (12 meses) = 1,97 % (≈2,0 %); pobreza mo
+        +netaria nacional 2024 = 27,6 %","MCP bcrp buscar_series | MCP bc
+        +rp serie PN01273PM | Bash cd ""C:/Users/LENOVO/Documents/GitHub/
+        +Tareas/Tarea_4_"" && git ls-files | grep -v ",ToolSearch×1 | Gre
+        +p×3 | mcp__bcrp__buscar_series×1 | mcp__bcrp__serie×1 | Bash×1,n
+        +o,15.9,"ambigua: 4 números para 2 cifras esperadas | error en Ba
+        +sh: Permission to use Bash with command cd ""C:/Users/LENOVO/Doc
+        +uments/GitHub/Tareas/Tarea_4_"" && git ls-files has been denie |
+        + permiso denegado: Bash"                                        
+      7 +B2,C2,"¿Cuál fue el valor máximo de la inflación de Lima Metropo
+        +litana en 12 meses entre 2020 y 2024 (BCRP) y cuál fue la brecha
+        +, en puntos porcentuales, entre la pobreza monetaria rural y la 
+        +urbana en 2024 (ENAHO, INEI)?",8.81 ; 14.5,"Inflación máxima 8,8
+        +1 % (junio de 2022); brecha rural − urbana ≈ 14,5 pp (39,3 % − 2
+        +4,8 %)",MCP bcrp buscar_series | Read SKILL.md | MCP bcrp resume
+        +n PN01273PM | Bash ls datos salidas 2>&1; cat salidas/indicadore
+        +s.csv 2>&1 | head -30 | Bash uv run python .claude/skills/limpia
+        +ndo-enaho/scripts/limpiar.py --anio 2024,ToolSearch×1 | Grep×3 |
+        + mcp__bcrp__buscar_series×1 | Glob×2 | Read×1 | mcp__bcrp__resum
+        +en×1 | Bash×2,no,28.7,ambigua: 4 números para 2 cifras esperadas
+        + | error en Bash: Permission to use Bash with command ls datos s
+        +alidas 2>&1; cat salidas/indicadores.csv 2>&1 has been denied. |
+        + error en Grep: Permission to read C:\Users\LENOVO\Documents\Git
+        +Hub\Tareas\Tarea_4_\salidas\indicadores.csv has been denied. | p
+        +ermiso denegado: Bash | permiso denegado: Grep                  
+
+● La corrida B2 terminó con 1 de 6 correctas, y ninguna sesión llamó a una
+  Skill. Ahora reviso C2, E3 y E4 para ver si alguna aprovechó el ejemplo de
+  mapeando-enaho.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● En C2 el modelo leyó SKILL.md y ejecutó limpiar.py a mano, sin llamar nunca a
+  la herramienta Skill, y ninguna sesión vio el ejemplo de Cajamarca; además,
+  los archivos regenerados salieron idénticos a los versionados. Ahora agrego
+  esa sección a comparacion.md.
+
+● Bash(cat >> evaluacion/comparacion.md <<'EOF'…)
+  ⎿  warning: in the working copy of 'evaluacion/calificar.py', LF will be
+     replaced by CRLF the next time Git touches it
+     warning: in the working copy of 'evaluacion/comparacion.md', LF will b
+     … +21 lines (ctrl+o to expand)
+  ⎿  Updated evaluacion\comparacion.md (+110 -0)
+      233    pero agregaron etiquetas o cuentas con números. Una instrucc
+           ión más estricta («solo los valores, separados
+      234    por punto y coma») reduciría ese ruido en futuras corridas.
+      235  - **Ningún modo afirmó causalidad** entre inflación y pobreza.
+      236 +                                                              
+      237 +## 7. Análisis complementario: Modo B2                        
+      238 +                                                              
+      239 +> **Se añadió después de la corrida oficial.** No reemplaza ni
+          + modifica el                                                  
+      240 +> resultado oficial del experimento, que sigue siendo **A (3/1
+          +0) frente a                                                   
+      241 +> B (8/10)**. Las respuestas esperadas y la regla de calificac
+          +ión son las                                                   
+      242 +> mismas; no se cambiaron.                                    
+      243 +                                                              
+      244 +### 7.1 Por qué                                               
+      245 +                                                              
+      246 +En la corrida oficial, el Modo B acertó las 4 preguntas de la 
+          +ENAHO sin                                                     
+      247 +invocar ninguna Skill: leyó cifras ya calculadas en el reposit
+          +orio (sección                                                 
+      248 +5.4). El Modo B2 busca responder si, **cuando las cifras solo 
+          +pueden salir de                                               
+      249 +ejecutar las Skills**, el modelo las activa y acierta.        
+      250 +                                                              
+      251 +### 7.2 Diseño                                                
+      252 +                                                              
+      253 +- Preguntas: las 4 de la ENAHO (E1-E4) y las 2 combinadas (C1,
+          + C2).                                                         
+      254 +- Misma configuración e instrucciones que el Modo B (`ejecutar
+          +.py --modos B2`),                                             
+      255 +  con `evaluacion/permisos_modo_b2.json` en lugar de `permisos
+          +_modo_b.json`.                                                
+      256 +- Registros aparte en `evaluacion/registros_b2/`; calificación
+          + con la misma                                                 
+      257 +  regla (`calificar.py --b2`) en `evaluacion/resultados_b2.csv
+          +`.                                                            
+      258 +- Antes de la corrida se borraron `salidas/personas_2024.parqu
+          +et` y                                                         
+      259 +  `salidas/hogares_2024.parquet`, una sola vez (no entre pregu
+          +ntas). Solo C2,                                               
+      260 +  la última en ejecutarse, los regeneró, así que ninguna sesió
+          +n aprovechó el                                                
+      261 +  trabajo de otra.                                            
+      262 +                                                              
+      263 +**Bloqueos adicionales** (`Read` y `Grep`, además de los del M
+          +odo B):                                                       
+      264 +                                                              
+      265 +| Pedido | Agregado al revisar el repo (contienen las mismas c
+          +ifras) |                                                      
+      266 +|---|---|                                                     
+      267 +| `README.md` | `datos/pobreza_departamento_2024.csv` (lo leyó
+          + B en E4) |                                                   
+      268 +| `**/reference.md` | `salidas/contraste_informe.txt` |       
+      269 +| `salidas/indicadores.csv` | `figuras/pobreza_*` y `mapas/**`
+          + (gráficos con las cifras) |                                  
+      270 +| `salidas/validacion.txt` | `.claude/skills/*/scripts/**` (`l
+          +impiar.py` trae las cifras de referencia; se puede **ejecutar*
+          +*, no leer) |                                                 
+      271 +| `salidas/grafico_*` | |                                     
+      272 +| `salidas/comparacion_mapa.csv` | |                          
+     … 73 more lines (ctrl+o to expand)
+● La corrida complementaria Modo B2 dio 1 de 6 correctas (el Modo B oficial
+  había acertado 4 de esas mismas 6). La herramienta Skill no se usó en ninguna
+  sesión. Quedó en el commit b39922c, y el resultado oficial sigue siendo A
+  (3/10) frente a B (8/10).
+
+  ┌─────┬────────────┬────────────┬────────────────────────────────────────┐
+  │ id  │  Modo B    │  Modo B2   │           Cómo respondió B2            │
+  │     │  oficial   │            │                                        │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ E1  │ ✔          │ ✔ 27,6     │ de memoria                             │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ E2  │ ✔          │ ✘ 39,6     │ de memoria                             │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ E3  │ ✔          │ ✘ ≈26      │ buscó en el repo, no halló nada y      │
+  │     │            │            │ respondió de memoria                   │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ E4  │ ✔          │ ✘ no       │ creyó que faltaban los microdatos,     │
+  │     │            │ responde   │ aunque estaban en datos/               │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ C1  │ ✘ ambigua  │ ✘ ambigua  │ inflación con el MCP; pobreza de       │
+  │     │            │            │ memoria                                │
+  ├─────┼────────────┼────────────┼────────────────────────────────────────┤
+  │ C2  │ ✘ ambigua  │ ✘ ambigua  │ inflación con el MCP; ejecutó el       │
+  │     │            │            │ script de limpiando-enaho              │
+  └─────┴────────────┴────────────┴────────────────────────────────────────┘
+
+  Si las Skills se activaron: solo en C2 se ejecutó el trabajo de una Skill, y
+  fue a mano. El modelo leyó SKILL.md y corrió limpiar.py con Bash. Con eso
+  obtuvo 39,30 y 24,81 y calculó la brecha de 14,5. Las cifras eran correctas,
+  pero la respuesta contó como incorrecta porque la línea final agregó la
+  cuenta. En las otras 5 preguntas el modelo no intentó ejecutar nada. Las
+  Skills funcionan cuando se ejecutan, pero el modelo casi nunca decide
+  ejecutarlas para una pregunta de datos.
+
+  Lo que hice además de lo que pediste:
+  - Más archivos bloqueados. Bloqueé otras fuentes que tenían las mismas cifras:
+    - datos/pobreza_departamento_2024.csv, el archivo del que el Modo B sacó E4;
+    - salidas/contraste_informe.txt;
+    - las figuras y el mapa de pobreza;
+    - los scripts de las Skills, que se pueden ejecutar pero no leer.
+  - Comandos Bash de lectura. Denegué cat, grep, git y similares, para que un
+    grep -r sobre todo el repo no se salte los bloqueos. Una prueba a propósito
+    confirmó que todo eso se bloquea.
+  - Una filtración posible quedó sin bloquear. mapeando-enaho/SKILL.md trae un
+    ejemplo con «Cajamarca 45.0 %» y no se puede bloquear porque la Skill lo
+    necesita. Según los registros, ninguna sesión vio esa línea.
+  - Cambios en los scripts. ejecutar.py y calificar.py ahora aceptan el modo B2.
+    Comprobé que la calificación oficial sigue dando exactamente el mismo
+    resultados.csv.
+
+  Otros detalles:
+  - Borré los dos parquet antes de la corrida. C2 los regeneró al ejecutar
+    limpiar.py. Los demás archivos de salidas/ que reescribió el script quedaron
+    idénticos a los versionados en git.
+  - Los registros están en evaluacion/registros_b2/, la calificación en
+    evaluacion/resultados_b2.csv y el análisis en la sección 7 de
+    comparacion.md. Hice commit sin push.
+  - Tus dos PNG en evidencias_ia/evaluacion/ siguen sin commit; no los toqué.
+
+  Recordatorio: exporta esta conversación a evidencias_ia/evaluacion/.
+
+✻ Baked for 1m 17s · done 7:56 p.m.
